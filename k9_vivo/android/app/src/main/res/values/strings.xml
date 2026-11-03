@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">K9</string>
+    <string name="erro_titulo">Could not open the panel</string>
+    <string name="erro_detalhe">Check that the hub is running on the PC and that the phone is on the same Wi-Fi network.\nIf the PC\'s IP changed, change the address.</string>
+    <string name="tentar_de_novo">Try again</string>
+    <string name="trocar_endereco">Change PC address</string>
+    <string name="dialogo_endereco">PC address (IP on the Wi-Fi network)</string>
+    <string name="ip_invalido">Use a local network IP, e.g. 192.168.0.134</string>
+    <string name="salvar">Save</string>
+</resources>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="erro_titulo">Impossible d\'ouvrir le panneau</string>
+    <string name="erro_detalhe">Vérifiez que le hub est lancé sur le PC et que le téléphone est sur le même réseau Wi-Fi.\nSi l\'IP du PC a changé, modifiez l\'adresse.</string>
+    <string name="tentar_de_novo">Réessayer</string>
+    <string name="trocar_endereco">Changer l\'adresse du PC</string>
+    <string name="dialogo_endereco">Adresse du PC (IP sur le réseau Wi-Fi)</string>
+    <string name="ip_invalido">Utilisez une IP de réseau local, par ex. : 192.168.0.134</string>
+    <string name="salvar">Enregistrer</string>
+</resources>

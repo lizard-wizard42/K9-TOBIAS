@@ -1,0 +1,21 @@
+{
+  "name": "k9-vivo",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Modo Vivo do K9: uma IA assume o robô por voz, com MCP e RAG.",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "mcp": "node src/mcp-server.js",
+    "test": "node --test test/*.test.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^1.3.0",
+    "@modelcontextprotocol/sdk": "^1.32.2",
+    "ws": "^8.22.0",
+    "zod": "^4.6.7"
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "name": "k9-control-hub",
+  "version": "1.0.0",
+  "description": "Minirobo K9V2.1 Local Control Hub \u2014 Low-Latency UDP (50Hz) + WebSocket + MQTT Bridge (Core style)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test test/*.test.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "mqtt": "^5.3.0",
+    "socket.io": "^4.6.1"
+  }
+}

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="erro_titulo">No se pudo abrir el panel</string>
+    <string name="erro_detalhe">Comprueba que el hub esté encendido en el PC y que el móvil esté en la misma red Wi-Fi.\nSi la IP del PC cambió, cambia la dirección.</string>
+    <string name="tentar_de_novo">Reintentar</string>
+    <string name="trocar_endereco">Cambiar dirección del PC</string>
+    <string name="dialogo_endereco">Dirección del PC (IP en la red Wi-Fi)</string>
+    <string name="ip_invalido">Usa una IP de red local, p. ej.: 192.168.0.134</string>
+    <string name="salvar">Guardar</string>
+</resources>

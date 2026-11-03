@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="erro_titulo">Não consegui abrir o painel</string>
+    <string name="erro_detalhe">Confira se o hub está ligado no PC e se o celular está na mesma rede Wi-Fi.\nSe o IP do PC mudou, troque o endereço.</string>
+    <string name="tentar_de_novo">Tentar de novo</string>
+    <string name="trocar_endereco">Trocar endereço do PC</string>
+    <string name="dialogo_endereco">Endereço do PC (IP na rede Wi-Fi)</string>
+    <string name="ip_invalido">Use um IP de rede local, ex.: 192.168.0.134</string>
+    <string name="salvar">Salvar</string>
+</resources>

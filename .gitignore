@@ -1,0 +1,170 @@
+# Dependencies & Build Outputs
+node_modules
+node_modules/
+**/node_modules
+**/node_modules/
+.pio
+.pio/
+**/.pio/
+.vscode/
+**/.vscode/
+
+# Secrets & Environment
+.env
+**/.env
+k9v2-1_firmware/src/secrets.h
+**/secrets.h
+
+# OS / Editor
+.DS_Store
+Thumbs.db
+*.log
+
+# Python virtualenvs
+.venv/
+**/.venv/
+
+# QR do Wi-Fi do robô (contém a senha)
+references/qr/
+
+# Vivo: memória e auditoria locais
+k9_vivo/data/
+
+# Dados locais do hub (nome do robô)
+k9_control_hub/data/
+
+# Chaves de IA e segredos soltos (nunca commitar)
+secret.md
+secrets.md
+*.secret
+
+# vídeos de estudo (grandes, locais)
+docs/study/video/
+
+# simulador: biblioteca compilada localmente
+sim/gait_shim.so
+
+# Local tooling, scratch and caches (never part of the project)
+.k9work/
+*.whl
+.claude/
+.idea/
+*.swp
+__pycache__/
+*.pyc
+
+# Local Android build files and signing material
+**/local.properties
+**/*.jks
+**/*.keystore
+**/build/
+**/.gradle/
+
+# Backups, personal inventories, media, large local exports
+backups/
+**/backups/
+*.bak
+MK5/arquivo/
+MK5/06_fonte_blender/backups/
+*.blend1
+*.mp4
+*.mov
+
+# Environment files (see .env.example)
+.env.*
+!.env.example
+
+# Local backups
+_backups/
+**/_antigos/*.blend
+
+# fotos e vídeos reais do Tobias (grandes, locais); só Midia/README.md é versionado
+Midia/**
+!Midia/README.md
+
+# músicas de terceiros (direitos autorais): nunca versionar
+Sounds/terceiros/
+
+# material de divulgação gerado (grande): só textos e ferramentas são versionados
+Divulgacao/video/
+Divulgacao/imagens/
+
+# GitHub is software-only. Keep physical designs, history and business assets local.
+/Impressao 3D/
+/MK5/
+/Historico/
+/references/
+/Sounds/
+/sim/
+/Divulgacao/
+/Midia/
+# Never publish build outputs or embedded credentials from personal binaries.
+*.bin
+# Removed engineering archives stay local; public docs are selected explicitly.
+/docs/relatorio-engenharia/
+/docs/study/
+/docs/diagnostics/
+/docs/camera-examples/
+/docs/*.zip
+
+# Local engineering documents excluded from the public software repository.
+/docs/CREATOR-FEATURES.md
+/docs/GAIT-REGISTRY.md
+/docs/GAIT-STUDY.md
+/docs/GAIT-TESTS-MK3.md
+/docs/K9-relatorio-engenharia.zip
+/docs/MECHANICAL-DATA.md
+/docs/REPOSITORY-STATUS.md
+/docs/camera-examples/2026-10-29-rev11-config.json
+/docs/camera-examples/2026-10-29-rev11-dsp-escura.png
+/docs/camera-examples/2026-10-29-rev12-18mhz-restaurado.png
+/docs/camera-examples/2026-10-29-rev12-config.json
+/docs/camera-examples/README.md
+/docs/diagnostics/k9cam-radio-v2-2026-10-29.json
+/docs/diagnostics/k9cam-radio-v3-2026-10-29.json
+/docs/diagnostics/k9cam-radio-v4-2026-10-29.json
+/docs/diagnostics/k9cam-radio-v6-2026-10-29.json
+/docs/diagnostics/k9cam-radio-v7-2026-10-29.json
+/docs/gait_registry.json
+/docs/identity/README.md
+/docs/identity/logo-referencia-original.png
+/docs/relatorio-engenharia/RELATORIO-K9.html
+/docs/relatorio-engenharia/RELATORIO-K9.md
+/docs/relatorio-engenharia/RELATORIO-K9.pdf
+/docs/relatorio-engenharia/cad/shin_left_MK3_v2.stl
+/docs/relatorio-engenharia/cad/shin_left_MK4_apoio18.stl
+/docs/relatorio-engenharia/cad/shin_left_MK4_traseira_mais8mm.stl
+/docs/relatorio-engenharia/cad/shin_right_MK3_v2.stl
+/docs/relatorio-engenharia/cad/shin_right_MK4_apoio18.stl
+/docs/relatorio-engenharia/cad/shin_right_MK4_traseira_mais8mm.stl
+/docs/relatorio-engenharia/dados/cinematica_pe.csv
+/docs/relatorio-engenharia/dados/resultados_avanco.csv
+/docs/relatorio-engenharia/figuras/fig_avanco_frequencia.svg
+/docs/relatorio-engenharia/figuras/fig_cinematica_altura_pe.svg
+/docs/relatorio-engenharia/figuras/foto_real_montado.jpg
+/docs/relatorio-engenharia/figuras/mk3_lateral.png
+/docs/relatorio-engenharia/figuras/mk4_conjunto.png
+/docs/relatorio-engenharia/figuras/pes_comparacao.png
+/docs/relatorio-engenharia/figuras_gerar.py
+/docs/relatorio-engenharia/fontes/BATERIA.md
+/docs/relatorio-engenharia/fontes/CAMPO.md
+/docs/relatorio-engenharia/fontes/DADOS-MECANICOS.md
+/docs/relatorio-engenharia/fontes/ESTUDO-MARCHA.md
+/docs/relatorio-engenharia/fontes/MARCHA-TESTES-MK3.md
+/docs/relatorio-engenharia/fontes/PE-LEIA-ME.md
+/docs/relatorio-engenharia/fontes/RELATORIO-ENGENHARIA-MK3.md
+/docs/relatorio-engenharia/gerar.py
+/docs/relatorio-engenharia/scripts/cinematica_perna.py
+/docs/relatorio-engenharia/scripts/compara_marchas.py
+/docs/relatorio-engenharia/scripts/trilha_robo.py
+/docs/study/BEG-POSE.md
+/docs/study/K9-modelo-cinematico-corrigido.py
+/docs/study/analisa_video.py
+/docs/study/cinematica_perna.py
+/docs/study/compara_marchas.py
+/docs/study/pedir.png
+/docs/study/pose_pedir.py
+/docs/study/rastreia_corpo.py
+/docs/study/rastreia_escora.py
+/docs/study/teste_proporcao.sh
+/docs/study/trilha_robo.py

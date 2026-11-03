@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="erro_titulo">无法打开控制面板</string>
+    <string name="erro_detalhe">请检查电脑上的中枢是否已启动，以及手机是否与电脑在同一个 Wi-Fi 网络中。\n如果电脑的 IP 变了，请更换地址。</string>
+    <string name="tentar_de_novo">重试</string>
+    <string name="trocar_endereco">更改电脑地址</string>
+    <string name="dialogo_endereco">电脑地址（Wi-Fi 网络中的 IP）</string>
+    <string name="ip_invalido">请使用本地网络 IP，例如：192.168.0.134</string>
+    <string name="salvar">保存</string>
+</resources>

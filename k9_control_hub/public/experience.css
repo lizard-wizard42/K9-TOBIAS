@@ -1,0 +1,59 @@
+.experience-nav,.experience-tools,.activity-bar {display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.experience-nav {margin:12px 20px}
+.experience-nav .btn[aria-pressed=true],.settings-tabs .btn[aria-selected=true] {background:var(--accent,#829f53);color:var(--bg,#181916)}
+.activity-bar {border-bottom:1px solid var(--bd,#777);padding-bottom:10px;margin-bottom:10px;justify-content:space-between}
+.activity-bar .btn {min-height:42px;padding:8px 12px}
+.experience-tools .btn {flex:1;min-height:44px}
+.favorites-box {margin:12px 0}.favorites-box summary {cursor:pointer;font-weight:bold;margin-bottom:8px}
+.favorites-grid {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.favorites-grid .btn {min-height:50px;padding:8px;font-size:13px;overflow-wrap:anywhere}
+#favoritesEdit {margin-top:8px}
+.settings-tabs {display:flex;gap:8px;flex-wrap:wrap;padding:12px 0;grid-column:1/-1}
+.settings-tabs .btn {min-height:44px}
+.adv-body > [hidden],.experience-dialog [hidden] {display:none!important}
+.experience-dialog {width:min(740px,95vw);max-height:90dvh;background:var(--bg,#20221e);color:var(--fg,#eee);border:2px solid var(--bd,#aaa);padding:20px;overflow:auto}
+.experience-dialog::backdrop {background:#000a}
+.experience-dialog input,.experience-dialog select {font:inherit;min-height:44px;max-width:100%;background:var(--bg,#20221e);color:inherit;border:1px solid var(--bd,#aaa);padding:8px}
+.experience-dialog .form-row {display:flex;gap:8px;flex-wrap:wrap;align-items:end;margin:12px 0}
+.experience-dialog label {display:grid;gap:6px}
+.sequence-step {display:flex;gap:8px;align-items:center;flex-wrap:wrap;border-bottom:1px solid var(--bd,#777);padding:10px 0}
+.sequence-step span {flex:1;min-width:140px}
+.sequence-step .btn {min-width:44px;min-height:44px;padding:8px}
+.favorite-choice {display:flex!important;align-items:center;gap:10px;padding:6px}
+.favorite-choice input {width:22px;min-height:22px}
+#favoriteChoices {display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+body[data-experience=personality] .a-poses {grid-column:1/-1}
+body[data-experience=personality] .a-poses .poses {grid-template-columns:repeat(auto-fit,minmax(140px,1fr))}
+body[data-experience=personality] .a-cam {max-height:360px;overflow:hidden}
+body[data-experience=personality] .a-drive {display:none}
+body[data-experience=control] .a-cam {min-width:0}
+body[data-experience=control] .a-poses .poses {max-height:40vh;overflow:auto}
+:fullscreen {overflow:auto;background:var(--bg,#181916)}
+@media(min-width:1100px) {
+ body[data-experience=control] main {grid-template-columns:minmax(240px,.75fr) minmax(0,2.2fr) minmax(300px,1fr)}
+}
+@media(max-width:600px) {
+ .experience-nav {margin:8px}.experience-nav .btn {flex:1;padding:8px;font-size:13px}
+ .favorites-grid {grid-template-columns:repeat(2,minmax(0,1fr))}
+ .experience-dialog {padding:12px}
+ .experience-dialog .form-row > * {max-width:100%}
+ #favoriteChoices {grid-template-columns:1fr}
+}
+@media(prefers-reduced-motion:reduce) { .experience-dialog * {animation:none!important;transition:none!important} }
+
+body[data-experience=control] .a-cam .cam-frame {max-height:65dvh}
+body[data-experience=personality] .a-cam {grid-column:1/-1;max-height:none}
+body[data-experience=personality] .a-cam .cam-frame {height:180px;min-height:0;max-height:180px}
+body[data-experience=personality] .a-cam #camStream {object-fit:contain}
+.experience-tools .btn {font-size:13px;padding:8px}
+.activity-bar #activityLabel {font-size:14px}
+
+@media(max-width:700px) {
+ .topbar {flex-wrap:wrap!important}
+ .topbar .top-right {width:100%;min-width:0;flex-wrap:wrap!important;justify-content:flex-end}
+ #settingsContent .adv-body {padding:12px;gap:16px}
+ .settings-tabs {gap:6px}
+ .settings-tabs .btn {font-size:12px;padding:8px}
+ #settingsPanel-controls .nome-config {grid-column:1/-1;min-width:0}
+}
+body[data-experience=personality] main {grid-template-columns:minmax(0,1fr);grid-template-areas:"poses" "cam"}

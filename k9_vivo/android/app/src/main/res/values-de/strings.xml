@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="erro_titulo">Das Bedienfeld konnte nicht geöffnet werden</string>
+    <string name="erro_detalhe">Prüfe, ob der Hub auf dem PC läuft und das Handy im selben WLAN ist.\nWenn sich die IP des PCs geändert hat, ändere die Adresse.</string>
+    <string name="tentar_de_novo">Erneut versuchen</string>
+    <string name="trocar_endereco">PC-Adresse ändern</string>
+    <string name="dialogo_endereco">PC-Adresse (IP im WLAN)</string>
+    <string name="ip_invalido">Verwende eine IP aus dem lokalen Netzwerk, z. B.: 192.168.0.134</string>
+    <string name="salvar">Speichern</string>
+</resources>

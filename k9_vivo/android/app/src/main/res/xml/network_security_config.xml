@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- O hub do PC fala HTTP puro na rede local (IP muda, então não dá para listar). Quem limita o destino é o app:
+     MainActivity só aceita o endereço do PC se for IP de rede local (192.168.x, 10.x, 172.16-31.x) ou localhost. -->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true" />
+</network-security-config>

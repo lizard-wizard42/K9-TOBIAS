@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Per-app language list (Android 13+: Settings > System > Languages > App languages). Keep in sync with docs/I18N.md. -->
+<locale-config xmlns:android="http://schemas.android.com/apk/res/android">
+    <locale android:name="pt-BR" />
+    <locale android:name="en-US" />
+    <locale android:name="es-ES" />
+    <locale android:name="fr-FR" />
+    <locale android:name="de-DE" />
+    <locale android:name="zh-CN" />
+</locale-config>

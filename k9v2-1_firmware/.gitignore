@@ -1,0 +1,2 @@
+# WiFi credentials — provide your own (see secrets.h.example)
+src/secrets.h

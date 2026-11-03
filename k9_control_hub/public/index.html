@@ -1,0 +1,2452 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#e8e7e3">
+  <script src="/theme-boot.js"></script>
+  <script src="/i18n/strings-ui.js"></script>
+  <script src="/i18n/strings-dyn.js"></script>
+  <script src="/i18n/strings-extra.js"></script>
+  <script src="/i18n/i18n.js"></script>
+  <title>K9-MK3 — Controle · Lizard Wizard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap">
+  <style>
+    /* ==========================================================================
+       K9 — direção visual: painel de bordo de campo, uma tela só.
+       Hierarquia: câmera (herói) > andar > poses > PARAR TUDO (sempre fixo).
+       Cores com função: verde = ação/ok, vermelho = parar/offline,
+       âmbar = lanterna e "aguardando". Todo o resto é cinza-carvão.
+       Fontes do sistema (LAN offline). Números em mono tabular.
+       ========================================================================== */
+    :root {
+      color-scheme: dark;
+      --bg: #0a0d0c;
+      --surface: #111715;
+      --surface-2: #18201d;
+      --surface-3: #212b27;
+      --line: #26312d;
+      --line-strong: #364640;
+      --text: #e8efe9;
+      --muted: #9aaba3;
+      --signal: #b6f23c;
+      --signal-ink: #10200a;
+      --signal-dim: rgba(182, 242, 60, .14);
+      --amber: #ffb224;
+      --amber-ink: #2a1a00;
+      --amber-dim: rgba(255, 178, 36, .14);
+      --danger: #ff4d3d;
+      --danger-deep: #a81c14;
+      --danger-dim: rgba(255, 77, 61, .15);
+      --font-ui: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Roboto, "Noto Sans", "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", "Source Han Sans SC", "WenQuanYi Micro Hei", sans-serif;
+      --font-data: ui-monospace, "SF Mono", "Cascadia Mono", "DejaVu Sans Mono", Menlo, Consolas, monospace;
+      --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 24px;
+      --r-sm: 8px; --r-md: 12px; --r-lg: 18px;
+      --hit: 44px;
+      --estop-h: 0px;   /* barra "parar tudo" removida */
+      --ease: cubic-bezier(.2, .8, .2, 1);
+      --dur: 140ms;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+    html { -webkit-text-size-adjust: 100%; }
+    body {
+      margin: 0;
+      font: 400 15px/1.35 var(--font-ui);
+      color: var(--text);
+      background: var(--bg);
+      min-height: 100vh;
+      min-height: 100dvh;
+      padding: 0 var(--s3) calc(var(--estop-h) + var(--s5) + env(safe-area-inset-bottom));
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+    }
+    button, input, summary { font: inherit; color: inherit; }
+    button { touch-action: manipulation; }
+    .mono { font-family: var(--font-data); font-variant-numeric: tabular-nums; }
+    .sr-only {
+      position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
+      overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+    }
+    :focus-visible { outline: 3px solid var(--amber); outline-offset: 2px; border-radius: 6px; }
+    :focus:not(:focus-visible) { outline: none; }
+
+    /* ---------- cabeçalho: nome + UM status ------------------------------- */
+    .lang-pick select { min-height: 44px; max-width: 9.5rem; padding: 0 8px; border-radius: 999px; border: 1px solid var(--line-strong); background: var(--surface-2); color: var(--text); font: inherit; font-size: .82rem; cursor: pointer; }
+    .wifi-form { display: grid; gap: var(--s3); }
+    .opt-bar[hidden] { display: none; }
+    .drive-row { justify-content: center; }
+    .top-right { display: flex; align-items: center; gap: var(--s2); }
+    .top-right .stop-mini { order: 99; }                      /* Parar sempre no extremo direito do grupo */
+    .stop-mini { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 14px;
+      border-radius: 999px; border: 1px solid rgba(255, 77, 61, .55); background: transparent; color: #ff8a80;
+      font: inherit; font-size: .82rem; cursor: pointer; }
+    .stop-mini svg { width: 16px; height: 16px; }
+    .stop-mini:hover { background: rgba(255, 77, 61, .14); }
+    .stop-mini:active { background: rgba(255, 77, 61, .3); }
+    .stop-mini:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+    .topbar {
+      max-width: 1180px; margin: 0 auto;
+      display: flex; align-items: center; justify-content: space-between; gap: var(--s3);
+      padding: var(--s3) 0 var(--s2);
+    }
+    .topbar h1 { margin: 0; font-size: 1.4rem; font-weight: 800; letter-spacing: .12em; }
+    .chip {
+      display: inline-flex; align-items: center; gap: 8px;
+      min-height: 34px; padding: 4px 14px; border-radius: 999px;
+      background: var(--surface-2); border: 1px solid var(--line-strong);
+      font-size: .9rem; font-weight: 700; white-space: nowrap;
+    }
+    .chip .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--muted); flex: none; }
+    .chip[data-state="online"] { border-color: rgba(182, 242, 60, .5); background: var(--signal-dim); color: var(--signal); }
+    .chip[data-state="online"] .dot { background: var(--signal); box-shadow: 0 0 0 3px rgba(182, 242, 60, .2); }
+    .chip[data-state="wait"] { border-color: rgba(255, 178, 36, .55); background: var(--amber-dim); color: var(--amber); }
+    .chip[data-state="wait"] .dot { background: var(--amber); animation: blink 1.1s steps(2, jump-none) infinite; }
+    .chip[data-state="off"] { border-color: rgba(255, 77, 61, .55); background: var(--danger-dim); color: var(--danger); }
+    .chip[data-state="off"] .dot { background: var(--danger); }
+    @keyframes blink { 0% { opacity: 1; } 100% { opacity: .25; } }
+    .conn-help {
+      max-width: 1180px; margin: 0 auto var(--s2); padding: var(--s2) var(--s3);
+      border-radius: var(--r-md); font-size: .88rem; border: 1px solid var(--line-strong); background: var(--surface-2);
+    }
+    .conn-help[hidden] { display: none; }
+    .conn-help[data-state="off"] { border-color: rgba(255, 77, 61, .55); background: var(--danger-dim); }
+    .conn-help[data-state="wait"] { border-color: rgba(255, 178, 36, .55); background: var(--amber-dim); }
+
+    /* ---------- tela principal -------------------------------------------- */
+    .main {
+      max-width: 1180px; margin: 0 auto;
+      display: grid; gap: var(--s3);
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-areas: "cam" "drive" "poses" "adv";
+    }
+    .panel {
+      background: var(--surface); border: 1px solid var(--line);
+      border-radius: var(--r-lg); padding: var(--s3); min-width: 0;
+    }
+    h2.label, h3.label {
+      margin: 0 0 var(--s3); font-size: .78rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--muted);
+    }
+    .panel-head { display: flex; justify-content: space-between; align-items: baseline; gap: var(--s2); margin-bottom: var(--s3); }
+    .panel-head .label { margin: 0; }
+    .panel-head .meta { font-size: .78rem; color: var(--muted); }
+    .a-cam { grid-area: cam; padding: var(--s2); background: #060807; border-color: var(--line-strong); }
+    .a-drive { grid-area: drive; }
+    .a-poses { grid-area: poses; }
+    .a-adv { grid-area: adv; padding: 0; }
+
+    /* ---------- câmera ----------------------------------------------------- */
+    .cam-frame {
+      position: relative; aspect-ratio: 3 / 4;
+      width: min(100%, calc((100dvh - 300px) * 3 / 4)); margin: 0 auto;   /* retrato: nunca mais alta que a janela */
+      background: #000; border-radius: var(--r-md); overflow: hidden; isolation: isolate;
+    }
+    .cam-frame img {
+      position: absolute; inset: 0; width: 100%; height: 100%;
+      object-fit: contain; image-rendering: auto;   /* suavizado: esconde a quadriculação do JPEG */
+      opacity: 0; transition: opacity 300ms var(--ease); background: #000;
+    }
+    .cam-frame.has-video img { opacity: 1; }
+    /* a câmera está montada de lado: a moldura é retrato (3:4) e a imagem 4:3 é girada 90° para a direita
+       (horário) e espelhada na horizontal da tela (o módulo entrega a imagem espelhada: ao apertar A o robô
+       vira para o lado certo mas a cena andava para o lado errado). A ordem rotate -> scaleX espelha depois
+       de girar. A caixa da imagem tem largura = altura da moldura e altura = largura da moldura, então a
+       imagem girada preenche tudo, sem barras pretas nem cantos fora da moldura. */
+    .cam-frame img {
+      inset: auto; top: 50%; left: 50%; width: 133.333%; height: 75%;
+      transform: translate(-50%, -50%) scaleX(-1) rotate(90deg);
+    }
+    .cam-frame::before {
+      content: ""; position: absolute; inset: 10px; z-index: 2; pointer-events: none;
+      --c: rgba(232, 239, 233, .5);
+      background:
+        linear-gradient(var(--c), var(--c)) top left / 18px 2px no-repeat,
+        linear-gradient(var(--c), var(--c)) top left / 2px 18px no-repeat,
+        linear-gradient(var(--c), var(--c)) top right / 18px 2px no-repeat,
+        linear-gradient(var(--c), var(--c)) top right / 2px 18px no-repeat,
+        linear-gradient(var(--c), var(--c)) bottom left / 18px 2px no-repeat,
+        linear-gradient(var(--c), var(--c)) bottom left / 2px 18px no-repeat,
+        linear-gradient(var(--c), var(--c)) bottom right / 18px 2px no-repeat,
+        linear-gradient(var(--c), var(--c)) bottom right / 2px 18px no-repeat;
+    }
+    .cam-overlay {
+      position: absolute; inset: 0; z-index: 4;
+      display: none; align-items: center; justify-content: center; text-align: center; padding: var(--s4);
+      background: repeating-linear-gradient(135deg, rgba(10, 13, 12, .88) 0 12px, rgba(16, 22, 20, .88) 12px 24px);
+    }
+    .cam-overlay.show { display: flex; }
+    .cam-overlay .msg {
+      max-width: 28ch; padding: var(--s3) var(--s4); border-radius: var(--r-md);
+      background: rgba(6, 8, 7, .9); border: 1px solid var(--line-strong);
+    }
+    .cam-overlay[data-kind="off"] .msg { border-color: rgba(255, 77, 61, .6); }
+    .cam-overlay[data-kind="wait"] .msg { border-color: rgba(255, 178, 36, .6); }
+    .cam-overlay strong { display: block; font-size: 1rem; }
+    .cam-overlay span { display: block; margin-top: 3px; font-size: .82rem; color: var(--muted); }
+    .cam-overlay[data-kind="off"] strong { color: var(--danger); }
+    .cam-overlay[data-kind="wait"] strong { color: var(--amber); }
+
+    /* lanterna: colada à câmera. Controle sempre com cara de ativo */
+    .strobe-bar { display: flex; align-items: center; gap: var(--s3); margin-top: var(--s2); padding: 0 var(--s1); }
+    .strobe-bar .qual-btn { flex: 0 0 auto; min-width: 96px; }
+    .strobe-bar input[type=range] { flex: 1; accent-color: #e3b341; min-height: 44px; }
+    .opt-bar { display: flex; align-items: center; gap: var(--s2); margin-top: var(--s2); padding: 0 var(--s1); flex-wrap: wrap; }
+    .opt-bar .qual-btn { flex: 1 1 0; min-width: 84px; }
+    .opt-bri { display: flex; align-items: center; gap: var(--s2); flex: 2 1 160px; font-size: .85rem; }
+    .opt-bri input { flex: 1; min-height: 44px; accent-color: #e3b341; }
+    .more-poses { margin-top: var(--s3); }
+    .more-poses summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; }
+    .qual-bar { display: flex; align-items: center; gap: var(--s2); margin-top: var(--s2); padding: 0 var(--s1); flex-wrap: wrap; }
+    .qual-label { color: var(--muted, #8b949e); font-size: .8rem; margin-right: var(--s1); }
+    .qual-btn { flex: 1 1 0; min-width: 84px; min-height: 44px; border-radius: 10px; border: 1px solid var(--line, #30363d);
+      background: transparent; color: inherit; font: inherit; font-size: .85rem; cursor: pointer; }
+    .qual-btn:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+    .qual-btn[aria-pressed="true"] { background: #e6edf3; color: #0d1117; border-color: #e6edf3; font-weight: 600; }
+    .flash-bar { display: flex; align-items: center; gap: var(--s3); margin-top: var(--s2); padding: 0 var(--s1); }
+    .flash-out { min-width: 6.5ch; text-align: right; font-size: .9rem; font-weight: 700; color: var(--muted); }
+    .flash-out[data-on="true"] { color: var(--amber); }
+
+    /* ---------- botões ----------------------------------------------------- */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: var(--s2);
+      min-height: var(--hit); min-width: var(--hit); padding: 0 var(--s4);
+      border-radius: var(--r-md); border: 1px solid var(--line-strong);
+      background: var(--surface-2); color: var(--text);
+      font-weight: 600; font-size: .95rem; cursor: pointer; text-decoration: none;
+      user-select: none; -webkit-user-select: none;
+      transition: background var(--dur) var(--ease), border-color var(--dur) var(--ease), transform 80ms var(--ease), box-shadow var(--dur) var(--ease);
+    }
+    .btn:hover { background: var(--surface-3); border-color: #4a5f57; }
+    .btn:active, .btn.active { transform: translateY(1px) scale(.98); background: #2c3a35; border-color: var(--signal); }
+    .btn svg { width: 18px; height: 18px; flex: none; }
+    .btn-flash { min-width: 124px; }
+    .btn-flash[aria-pressed="true"] {
+      background: var(--amber); color: var(--amber-ink); border-color: var(--amber);
+      box-shadow: 0 0 0 3px var(--amber-dim), 0 0 22px rgba(255, 178, 36, .35);
+    }
+    .btn-flash[aria-pressed="true"]:hover { background: #ffc24d; }
+    .btn-pose { min-height: 56px; font-size: 1rem; }
+    .btn-pose.alt { background: transparent; border-style: dashed; color: var(--muted); }
+    .btn-sm { min-height: var(--hit); padding: 0 var(--s3); font-size: .85rem; }
+    .btn-warn { background: var(--amber-dim); border-color: rgba(255, 178, 36, .6); color: var(--amber); }
+    .btn-warn:hover { background: rgba(255, 178, 36, .24); }
+    .btn-danger { background: var(--danger); border-color: var(--danger); color: #1a0402; font-weight: 800; }
+    .btn-danger:hover { background: #ff6a5c; }
+
+    /* ---------- PARAR TUDO: fixo, sempre visível --------------------------- */
+    .estop-dock {
+      position: fixed; z-index: 50; left: 0; right: 0; bottom: 0;
+      padding: var(--s3) var(--s3) calc(var(--s3) + env(safe-area-inset-bottom));
+      background: linear-gradient(to top, rgba(10, 13, 12, .98) 55%, rgba(10, 13, 12, 0));
+      pointer-events: none;
+    }
+    .estop {
+      pointer-events: auto; display: flex; align-items: center; justify-content: center; gap: var(--s3);
+      width: 100%; max-width: 640px; height: var(--estop-h); margin: 0 auto; padding: 0 var(--s4);
+      border-radius: var(--r-md); border: 2px solid #ff8a7d;
+      color: #fff; font-weight: 900; font-size: 1.2rem; letter-spacing: .14em; text-transform: uppercase;
+      cursor: pointer; user-select: none; -webkit-user-select: none; touch-action: none;
+      background:
+        repeating-linear-gradient(-45deg, rgba(0, 0, 0, .22) 0 10px, transparent 10px 20px) left / 26px 100% no-repeat,
+        repeating-linear-gradient(-45deg, rgba(0, 0, 0, .22) 0 10px, transparent 10px 20px) right / 26px 100% no-repeat,
+        linear-gradient(180deg, #ff5a49, var(--danger-deep));
+      box-shadow: 0 8px 28px rgba(255, 77, 61, .35), inset 0 1px 0 rgba(255, 255, 255, .35);
+      transition: transform 80ms var(--ease), box-shadow var(--dur) var(--ease), filter var(--dur) var(--ease);
+    }
+    .estop svg { width: 26px; height: 26px; flex: none; }
+    .estop kbd {
+      font: 700 .68rem var(--font-data); padding: 2px 7px; border-radius: 5px;
+      background: rgba(0, 0, 0, .3); border: 1px solid rgba(255, 255, 255, .35);
+    }
+    .estop:hover { filter: brightness(1.1); box-shadow: 0 10px 34px rgba(255, 77, 61, .5), inset 0 1px 0 rgba(255, 255, 255, .35); }
+    .estop:active, .estop.fired { transform: scale(.985); filter: brightness(.9); box-shadow: 0 2px 10px rgba(255, 77, 61, .4), inset 0 2px 6px rgba(0, 0, 0, .4); }
+    .estop:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+
+    /* ---------- andar: joystick + direcional ------------------------------- */
+    .drive-row { display: flex; align-items: center; justify-content: center; gap: var(--s4); flex-wrap: wrap; }
+    .joy {
+      --joy: clamp(140px, 40vw, 200px);
+      width: var(--joy); height: var(--joy); border-radius: 50%; position: relative; flex: none;
+      touch-action: none; cursor: grab; user-select: none; -webkit-user-select: none;
+      border: 2px solid var(--line-strong);
+      background:
+        radial-gradient(circle at 50% 50%, transparent 0 66%, rgba(182, 242, 60, .1) 66.5% 67.5%, transparent 68%),
+        linear-gradient(var(--line), var(--line)) center / 1px 84% no-repeat,
+        linear-gradient(var(--line), var(--line)) center / 84% 1px no-repeat,
+        radial-gradient(circle, #1b2420 0%, #0c110f 100%);
+      transition: border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+    }
+    .joy:hover { border-color: #4a5f57; }
+    .joy.live { border-color: var(--signal); box-shadow: 0 0 0 4px var(--signal-dim), inset 0 0 30px rgba(182, 242, 60, .08); cursor: grabbing; }
+    .joy-stick {
+      position: absolute; left: 50%; top: 50%; width: 38%; height: 38%; margin: -19% 0 0 -19%;
+      border-radius: 50%; pointer-events: none;
+      background: radial-gradient(circle at 35% 30%, #e1ff9a, var(--signal) 45%, #6a9a10 100%);
+      box-shadow: 0 6px 14px rgba(0, 0, 0, .55), 0 0 0 3px rgba(182, 242, 60, .18);
+      transition: transform 120ms var(--ease); will-change: transform;
+    }
+    .joy.live .joy-stick { transition: transform 30ms linear; }
+    .dpad { display: grid; grid-template-columns: repeat(3, var(--hit)); grid-template-rows: repeat(3, var(--hit)); gap: 4px; flex: none; }
+    .dpad .btn { padding: 0; border-radius: 10px; touch-action: none; }
+    .dpad .btn svg { width: 22px; height: 22px; }
+    .dpad .btn.mid { border-radius: 50%; color: var(--danger); }
+    .hint { margin: var(--s3) 0 0; text-align: center; font-size: .78rem; color: var(--muted); }
+    .hint b { color: var(--text); font-weight: 600; }
+
+    /* ---------- poses ------------------------------------------------------- */
+    .poses { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s2); }
+
+    /* ---------- Avançado (um só recolhível) ---------------------------------- */
+    details.adv > summary {
+      list-style: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: var(--s2);
+      min-height: 56px; padding: 0 var(--s4); border-radius: var(--r-lg);
+      font-size: .95rem; font-weight: 700; color: var(--text);
+      transition: background var(--dur) var(--ease);
+    }
+    details.adv > summary::-webkit-details-marker { display: none; }
+    details.adv > summary:hover { background: var(--surface-2); }
+    details.adv > summary small { display: block; font-weight: 400; font-size: .76rem; color: var(--muted); }
+    details.adv > summary .chev { width: 20px; height: 20px; flex: none; color: var(--muted); transition: transform var(--dur) var(--ease); }
+    details.adv[open] > summary .chev { transform: rotate(180deg); }
+    details.adv[open] > summary { border-bottom-left-radius: 0; border-bottom-right-radius: 0; border-bottom: 1px solid var(--line); }
+    .adv-body { padding: var(--s4) var(--s3); display: grid; gap: var(--s5); }
+    .adv-sec { display: grid; gap: var(--s3); min-width: 0; }
+    .adv-sec > .label { margin: 0; }
+    .note { margin: 0; font-size: .82rem; color: var(--muted); }
+    .row { display: flex; flex-wrap: wrap; gap: var(--s2); }
+
+    .stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s2); }
+    .stat { background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--r-md); padding: var(--s2) var(--s3); font-size: .78rem; color: var(--muted); min-width: 0; }
+    .stat b { display: block; margin-top: 2px; font: 700 .95rem var(--font-data); color: var(--text); overflow-wrap: anywhere; }
+    .stat[data-q="good"] b { color: var(--signal); }
+    .stat[data-q="mid"] b { color: var(--amber); }
+    .stat[data-q="bad"] b { color: var(--danger); }
+    .bars { display: inline-flex; align-items: flex-end; gap: 1.5px; height: 10px; margin-right: 5px; vertical-align: -1px; }
+    .bars i { width: 3px; background: rgba(255, 255, 255, .22); border-radius: 1px; }
+    .bars i:nth-child(1) { height: 4px; } .bars i:nth-child(2) { height: 6px; }
+    .bars i:nth-child(3) { height: 8px; } .bars i:nth-child(4) { height: 10px; }
+    .bars i.on { background: currentColor; }
+
+    .ip-form { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--s2); align-items: end; }
+    .ip-form label { grid-column: 1 / -1; font-size: .82rem; color: var(--muted); }
+    .ip-form input {
+      min-height: var(--hit); min-width: 0; padding: 0 var(--s3); border-radius: var(--r-md);
+      background: var(--bg); border: 1px solid var(--line-strong); color: var(--text);
+      font-family: var(--font-data); font-size: .95rem; transition: border-color var(--dur) var(--ease);
+    }
+    .ip-form input::placeholder { color: #6d7f77; }
+    .ip-form input:hover { border-color: #4a5f57; }
+    .ip-form input:focus-visible { outline-offset: 0; border-color: var(--amber); }
+    .ip-form input[aria-invalid="true"] { border-color: var(--danger); }
+    .ip-err { grid-column: 1 / -1; margin: 0; font-size: .8rem; color: var(--danger); }
+    .ip-err:empty { display: none; }
+
+    .legs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s2); }
+    .legs-front { grid-column: 1 / -1; text-align: center; font-size: .66rem; letter-spacing: .3em; color: var(--muted); text-transform: uppercase; }
+    .leg {
+      background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--r-md);
+      padding: var(--s3) var(--s2); display: grid; gap: var(--s2); justify-items: center;
+    }
+    .leg-info { width: 100%; min-width: 0; }
+    .leg-head { display: flex; justify-content: space-between; align-items: flex-end; gap: var(--s2); margin-bottom: 2px; }
+    .leg svg { width: 76px; height: 50px; overflow: visible; }
+    .leg .arc { fill: none; stroke: var(--line-strong); stroke-width: 5; stroke-linecap: round; }
+    .leg .neutral { stroke: var(--signal); stroke-width: 2; opacity: .7; }
+    .leg .needle { stroke: var(--text); stroke-width: 3; stroke-linecap: round; transform-origin: 38px 44px; transition: transform 120ms var(--ease); }
+    .leg .hub { fill: var(--text); }
+    .leg-name { font-weight: 800; letter-spacing: .06em; font-size: .85rem; }
+    .leg-name small { display: block; font-weight: 500; font-size: .7rem; letter-spacing: 0; color: var(--muted); }
+    .leg-deg { font-size: 1.15rem; font-weight: 700; line-height: 1.1; }
+    .leg-us { font-size: .72rem; color: var(--muted); line-height: 1.35; }
+    .leg-us b { color: var(--text); font-weight: 600; }
+    .leg-us .off-pos { color: var(--amber); }
+    @media (min-width: 480px) {
+      .leg { grid-template-columns: 76px minmax(0, 1fr); justify-items: stretch; align-items: center; }
+    }
+
+    .trim-row {
+      display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--s2); align-items: center;
+      padding: var(--s2) var(--s3); background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--r-md);
+    }
+    .trim-btns { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s2); }
+    @media (min-width: 560px) {
+      .trim-row { grid-template-columns: minmax(0, 1fr) auto auto; }
+      .trim-btns { grid-column: auto; grid-template-columns: repeat(3, auto); }
+    }
+    .trim-row .who { font-weight: 800; letter-spacing: .04em; font-size: .88rem; }
+    .trim-row .who small { display: block; font-weight: 500; font-size: .72rem; color: var(--muted); letter-spacing: 0; }
+    .trim-row .us { color: var(--amber); font-size: .85rem; }
+    .confirm {
+      border: 1px solid rgba(255, 178, 36, .6); background: var(--amber-dim); border-radius: var(--r-md);
+      padding: var(--s3); display: grid; gap: var(--s3);
+    }
+    .confirm[hidden] { display: none; }
+    .confirm p { margin: 0; font-size: .88rem; }
+    .confirm .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s2); }
+
+    details.sub > summary { cursor: pointer; min-height: var(--hit); display: flex; align-items: center; gap: var(--s2); font-size: .78rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+    details.sub > summary:hover { color: var(--text); }
+    details.sub[open] > summary { margin-bottom: var(--s3); }
+    .log-view { max-height: 260px; overflow: auto; font: 12px/1.4 var(--font-data); white-space: pre-wrap; margin: 0; user-select: text; }
+
+    /* ---------- slider (lanterna) -------------------------------------------- */
+    input[type=range] {
+      --acc: #c9d6ce;
+      -webkit-appearance: none; appearance: none; flex: 1; min-width: 0; height: var(--hit);
+      background: transparent; cursor: pointer; margin: 0;
+    }
+    input[type=range][data-on="true"] { --acc: var(--amber); }
+    input[type=range]::-webkit-slider-runnable-track {
+      height: 8px; border-radius: 99px;
+      background: linear-gradient(to right, var(--acc) var(--fill, 100%), var(--surface-3) var(--fill, 100%));
+      border: 1px solid var(--line-strong);
+    }
+    input[type=range]::-moz-range-track { height: 8px; border-radius: 99px; background: var(--surface-3); border: 1px solid var(--line-strong); }
+    input[type=range]::-moz-range-progress { height: 8px; border-radius: 99px; background: var(--acc); }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none; width: 28px; height: 28px; margin-top: -11px; border-radius: 50%;
+      background: #fff2d1; border: 3px solid var(--acc); box-shadow: 0 2px 8px rgba(0, 0, 0, .5);
+      transition: transform var(--dur) var(--ease);
+    }
+    input[type=range]::-moz-range-thumb { width: 22px; height: 22px; border-radius: 50%; background: #fff2d1; border: 3px solid var(--acc); }
+    input[type=range]:hover::-webkit-slider-thumb { transform: scale(1.12); }
+    input[type=range]:active::-webkit-slider-thumb { transform: scale(.94); }
+    input[type=range]:focus-visible { outline: 3px solid var(--amber); outline-offset: 0; border-radius: 99px; }
+
+    /* ---------- avisos -------------------------------------------------------- */
+    .toasts {
+      position: fixed; z-index: 60; top: calc(8px + env(safe-area-inset-top)); left: 50%; transform: translateX(-50%);
+      width: min(92vw, 420px); display: flex; flex-direction: column; gap: var(--s2); pointer-events: none;
+    }
+    .toast {
+      pointer-events: auto; display: flex; gap: var(--s2); align-items: flex-start;
+      padding: 10px var(--s3); border-radius: var(--r-md); font-size: .88rem; font-weight: 500;
+      background: #0d1311; border: 1px solid var(--line-strong); border-left: 4px solid var(--muted);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, .55); animation: toast-in 180ms var(--ease);
+    }
+    .toast[data-kind="ok"] { border-left-color: var(--signal); }
+    .toast[data-kind="warn"] { border-left-color: var(--amber); }
+    .toast[data-kind="error"] { border-left-color: var(--danger); }
+    .toast.out { opacity: 0; transform: translateY(-6px); transition: opacity 180ms, transform 180ms; }
+    @keyframes toast-in { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
+
+    /* ---------- desktop -------------------------------------------------------- */
+    @media (min-width: 980px) {
+      body { padding-left: var(--s5); padding-right: var(--s5); }
+      .main {
+        grid-template-columns: minmax(0, 1.4fr) minmax(340px, 1fr);
+        grid-template-areas: "cam drive" "cam poses" "adv adv";
+        align-items: start; gap: var(--s4);
+      }
+      .panel { padding: var(--s4); }
+      .a-cam { padding: var(--s3); }
+      .a-adv { padding: 0; }
+      .joy { --joy: 200px; }
+      .estop { max-width: 720px; }
+      .adv-body { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
+      .adv-wide { grid-column: 1 / -1; }
+    }
+
+    /* ---------- celular em paisagem: joystick | câmera | poses -------------- */
+    @media (orientation: landscape) and (max-height: 540px) {
+      :root { --estop-h: 0px; }
+      body { padding: 0 var(--s2) var(--s3); }
+      .topbar { padding: var(--s2) 0; }
+      .main {
+        --right-w: clamp(190px, 28vw, 260px);
+        max-width: none; gap: var(--s2);
+        grid-template-columns: minmax(150px, .8fr) minmax(0, 1.9fr) var(--right-w);
+        grid-template-areas: "drive cam poses" "adv adv adv";
+        align-items: start;
+      }
+      .panel { padding: var(--s2); }
+      .a-cam { padding: var(--s1); }
+      .cam-frame { width: min(100%, calc((100dvh - 120px) * 3 / 4)); margin: 0 auto; }
+      .a-drive { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+      .a-drive .panel-head { width: 100%; }
+      .joy { --joy: clamp(130px, 34vh, 190px); }
+      .a-poses { padding-bottom: calc(var(--estop-h) + var(--s5)); }
+      .poses { grid-template-columns: 1fr 1fr; }
+      .btn-pose { min-height: 48px; }
+      .estop-dock { left: auto; width: var(--right-w); padding: var(--s2); background: none; right: var(--s2); }
+      .estop { font-size: .95rem; letter-spacing: .06em; gap: var(--s2); padding: 0 var(--s3); }
+      .estop kbd, .hint { display: none; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+    }
+    @media (forced-colors: active) {
+      .btn, .estop, .chip, .panel, .joy { border: 1px solid ButtonText; }
+    }
+
+    /* --- layout herdado do painel (tamanhos/ grids). A pele LW fica no bloco seguinte. --- */
+    .joy { --joy: 174px; }
+    .btn-pose { flex-direction: column; gap: 4px; min-height: 112px; padding: 10px 5px; line-height: 1.25; text-align: center; }
+    .btn-pose .pose-icon { width: 82px; height: 58px; object-fit: contain; }
+    .more-poses summary { justify-content: space-between; gap: 12px; }
+    .more-poses summary::after { content: '+'; font: 500 1.3rem var(--font-data); }
+    .more-poses[open] summary::after { content: '−'; }
+    .pose-note { margin: 0 0 12px; line-height: 1.5; }
+    .hint { line-height: 1.55; }
+    .poses { gap: 8px; }
+    .a-drive { }
+    @media (min-width: 980px) {
+      .main { grid-template-columns: minmax(0,1.35fr) minmax(380px,1fr); row-gap: 14px; }
+      .joy { --joy: 174px; }
+      .a-drive { padding-bottom: 12px; }
+    }
+    @media (max-width: 479px) {
+      body { padding-left: 10px; padding-right: 10px; }
+      .topbar { gap: 8px; padding: 12px 0; }
+      .brand { gap: 7px; }
+      .brand-mark { width: 39px; height: 43px; padding: 3px; }
+      .brand h1 { font-size: 1.35rem; }
+      .brand small { font-size: .49rem; letter-spacing: .08em; }
+      .top-right { gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+      .chip { font-size: .72rem; padding: 4px 8px; min-height: 30px; }
+      .stop-mini { padding: 0 9px; font-size: .76rem; }
+      .camera-heading .meta { font-size: .6rem; }
+      .flash-bar { flex-wrap: wrap; }
+      .flash-bar .btn-flash { min-width: 108px; }
+      .flash-out { min-width: 6ch; font-size: .78rem; margin-left: auto; }
+      .flash-bar input[type=range] { order: 3; flex: 1 0 100%; width: 100%; }
+      .btn-pose { min-height: 98px; }
+    }
+    @media (orientation: landscape) and (max-height: 540px) {
+      .topbar { margin-bottom: 8px; padding: 8px 0; }
+      .brand-mark { width: 36px; height: 36px; padding: 3px; }
+      .brand h1 { font-size: 1.25rem; }
+      .brand small { font-size: .5rem; }
+      .btn-pose { min-height: 73px; padding: 6px 3px; font-size: .72rem; }
+      .btn-pose .pose-icon { width: 51px; height: 34px; }
+      .camera-heading { padding-bottom: 6px; }
+    }
+
+    /* Compact camera controls, with full-size touch targets. */
+    .flash-bar, .strobe-bar {
+      display: grid; grid-template-columns: 104px minmax(40px,1fr) 56px;
+      gap: 10px; align-items: center; padding: 0; margin-top: 6px;
+    }
+    .flash-bar .btn-flash, .strobe-bar .qual-btn {
+      min-width: 0; width: 104px; min-height: 36px; padding: 0 8px;
+      border: 1px solid #47523a; border-radius: 4px; background: #20271c;
+      color: #d5dbc3; font-size: .78rem; font-weight: 500; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+      cursor: pointer;
+    }
+    .strobe-bar .qual-btn { text-align: center; }
+    .flash-bar .btn-flash:hover, .strobe-bar .qual-btn:hover { background: #35412b; border-color: #a5b27d; color: var(--text); }
+    .flash-bar .btn-flash[aria-pressed="true"], .strobe-bar .qual-btn[aria-pressed="true"] {
+      background: #d4df91; color: #202711; border-color: #d4df91; font-weight: 600;
+    }
+    .flash-bar .btn-flash svg { width: 14px; height: 14px; flex-shrink: 0; }
+    .flash-bar input[type=range], .strobe-bar input[type=range] {
+      order: 0; width: 100%; min-width: 0; min-height: 36px; margin: 0;
+      accent-color: #a6b57a;
+    }
+    .flash-out, .strobe-bar output { min-width: 0; margin: 0; font-size: .7rem; font-weight: 400; text-align: right; white-space: nowrap; }
+    #strobeWarn { margin: 0 0 6px; font-size: .65rem; opacity: .8; text-align: left; }
+    .qual-bar { flex-wrap: nowrap; gap: 2px; padding: 5px 0 0; margin-top: 0; border-top: 1px solid var(--line); }
+    .qual-bar .qual-label { flex: 0 0 94px; font-size: .72rem; margin: 0; padding-left: 6px; }
+    .qual-bar .qual-btn {
+      min-width: 0; min-height: 44px; padding: 0 7px; border: 0; border-radius: 3px;
+      background: transparent; color: var(--muted); font-size: .72rem;
+    }
+    .qual-bar .qual-btn:hover { background: #ffffff08; color: var(--text); }
+    .qual-bar .qual-btn[aria-pressed="true"] { background: #d4df9110; color: var(--signal); box-shadow: inset 0 -2px var(--signal); font-weight: 600; }
+
+    .camera-tools { display:flex; gap:0; margin-top:6px; position:relative; border-top:1px solid var(--line); }
+    .camera-tool { flex:1; min-width:0; }
+    .camera-tool > summary { list-style:none; cursor:pointer; min-height:44px; display:flex; align-items:center; justify-content:center; gap:7px; color:var(--muted); font-size:.76rem; }
+    .camera-tool > summary::-webkit-details-marker { display:none; }
+    .camera-tool[open] > summary, .camera-tool > summary:hover { color:var(--signal); background:#d4df910a; }
+    .tool-popover { position:absolute; z-index:20; top:100%; left:0; right:0; padding:12px; border:1px solid var(--line-strong); background:var(--surface); border-radius:0 0 6px 6px; box-shadow:0 12px 24px #0008; }
+    .tool-popover .qual-bar { border:0; padding:0; }
+    .settings-button { width:44px; height:44px; flex:none; display:inline-flex; align-items:center; justify-content:center; border:0; border-radius:4px; background:transparent; color:var(--muted); cursor:pointer; font-size:1.5rem; }
+    .settings-button svg { width:23px; height:23px; }
+    .settings-button:hover { color:var(--text); background:#ffffff0a; }
+    #settingsDialog { color:var(--text); background:var(--surface); border:1px solid var(--line-strong); border-radius:8px; padding:0; width:min(900px,calc(100% - 24px)); max-height:85dvh; }
+    #settingsDialog::backdrop { background:#000a; }
+    .settings-heading { display:flex; align-items:center; justify-content:space-between; padding:8px 16px; border-bottom:1px solid var(--line); }
+    .settings-heading h2 { font-size:1rem; margin:0; }
+    #settingsContent .a-adv { border:0; margin:0; box-shadow:none; }
+    #settingsContent #advDetails > summary { display:none; }
+    @media(max-width:479px) { .topbar .brand small { display:none; } .topbar .brand-mark { width:30px; } .top-right { gap:2px; flex-wrap:nowrap; } .topbar { gap:4px; } .chip { font-size:.65rem; padding:4px 6px; } .chip .dot { width:6px; height:6px; } .stop-mini { padding:0 7px; } }
+    .gait-picker { margin-top: 16px; border-top: 1px solid var(--line); padding-top: 12px; }
+    .gait-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; margin-top: 8px; }
+    .gait-options .qual-btn { min-height: 44px; }
+    [data-controls-v2]:disabled { opacity: .4; cursor: not-allowed; }
+
+    /* ==========================================================================
+       LIZARD_WIZARD // CREATIVE LAB — identidade do lizardwizard.io no painel do K9.
+       Papel quente + tinta, verde-oliva do logo, coral dos botões, amarelo do lagarto.
+       Títulos Archivo Black, texto Inter, rótulos mono em caixa alta. Bordas de tinta,
+       sombras duras, listras diagonais e os símbolos ◇ ✦ ■ //.
+       Funciona sem internet: as fontes só entram se a rede deixar (display=swap).
+       ========================================================================== */
+    :root {
+      color-scheme: light;
+      --ink: #292a28; --ink-2: #191a18; --paper: #e8e7e3; --paper-2: #dbdcd5; --paper-3: #f3f2ee;
+      --olive: #789353; --sage: #a9c77f; --coral: #ef593f; --coral-deep: #c4381f; --yolk: #f1c232;
+      --on-fill: #292a28;
+      /* tokens de tema: claro (padrão) */
+      --bgp: var(--paper); --panel: var(--paper-3); --card: #fff; --tx: var(--ink); --bd: var(--ink); --sh: var(--ink);
+      --bg: var(--bgp); --surface: var(--panel); --surface-2: var(--card); --surface-3: var(--paper-2);
+      --line: #bdbeb5; --line-strong: var(--bd); --text: var(--tx); --muted: #5a5c55;
+      --dots: rgba(41,42,40,.13); --cross: var(--ink); --ring: rgba(41,42,40,.5); --bars: rgba(41,42,40,.2);
+      --hatch-a: #fff; --hatch-b: var(--paper-2); --dis-bg: var(--paper-2); --dis-fg: #8b8d85;
+      --mark-bg: var(--ink); --mark-fg: var(--sage); --press-bg: var(--ink); --press-fg: var(--sage);
+      --head-bg: var(--ink); --head-fg: var(--paper); --icon-filter: invert(.84);
+      --signal: #55702f; --signal-ink: #fff; --signal-dim: rgba(120,147,83,.22);
+      --amber: #8a6200; --amber-ink: var(--ink); --amber-dim: rgba(241,194,50,.3);
+      --danger: var(--coral-deep); --danger-deep: var(--coral); --danger-dim: rgba(239,89,63,.16);
+      --font-display: "Archivo Black", "Arial Black", "Helvetica Neue", Impact, system-ui, sans-serif;
+      --font-ui: Inter, "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Roboto, "Noto Sans", sans-serif;
+      --font-data: "JetBrains Mono", "Space Mono", ui-monospace, "SF Mono", "Cascadia Mono", "DejaVu Sans Mono", Menlo, Consolas, monospace;
+      --r-sm: 2px; --r-md: 3px; --r-lg: 4px;
+      --shadow: 4px 4px 0 var(--sh);
+      --shadow-sm: 2px 2px 0 var(--sh);
+    }
+    /* modo escuro: tinta de fundo, papel nos textos, sombras em verde-oliva */
+    :root[data-theme="dark"] {
+      color-scheme: dark;
+      --bgp: #151614; --panel: #1f201e; --card: #2a2b28; --tx: #ebeae5; --bd: #cfd0c6; --sh: var(--olive);
+      --surface-3: #363733; --line: #3a3b37; --muted: #a9aba0;
+      --dots: rgba(232,231,227,.07); --cross: #cfd0c6; --ring: rgba(207,208,198,.45); --bars: rgba(232,231,227,.25);
+      --hatch-a: #2a2b28; --hatch-b: #232421; --dis-bg: #232421; --dis-fg: #74766d;
+      --mark-bg: var(--paper); --mark-fg: #55702f; --press-bg: var(--paper); --press-fg: var(--ink);
+      --head-bg: #0e0f0d; --head-fg: var(--paper); --icon-filter: none;
+      --signal: var(--sage); --amber: var(--yolk); --amber-dim: rgba(241,194,50,.22);
+      --danger: #ff7b63; --danger-dim: rgba(239,89,63,.22);
+    }
+    :root[data-theme="dark"] .cam-frame { outline-color: #2a2b28; }
+    :root[data-theme="dark"] a { color: var(--sage); }
+    :root[data-theme="dark"] .joy-stick::after { color: var(--ink); }
+    :root[data-theme="dark"] input[type=range]::-webkit-slider-runnable-track { background: linear-gradient(to right, var(--acc) var(--fill, 100%), var(--card) var(--fill, 100%)); }
+    :root[data-theme="dark"] .flash-out[data-on="true"] { color: var(--yolk); }
+    :root[data-theme="dark"] .leg .hub { fill: var(--coral); }
+    :root[data-theme="dark"] .stop-mini:active { color: #fff; }
+    /* alternar tema */
+    .theme-toggle { width: 44px; height: 44px; flex: none; display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
+      background: var(--card); color: var(--tx); border: 2px solid var(--bd); border-radius: 2px; box-shadow: var(--shadow-sm); padding: 0;
+      transition: transform 80ms var(--ease), box-shadow 80ms var(--ease), background var(--dur) var(--ease); }
+    .theme-toggle:hover { background: var(--sage); color: var(--on-fill); }
+    .theme-toggle:active { transform: translate(2px, 2px); box-shadow: none; }
+    .theme-toggle svg { width: 22px; height: 22px; }
+    .theme-toggle .i-sun { display: none; }
+    :root[data-theme="dark"] .theme-toggle .i-sun { display: block; }
+    :root[data-theme="dark"] .theme-toggle .i-moon { display: none; }
+    .top-right { gap: 8px; }
+    html { background: var(--bgp); }
+    body {
+      color: var(--tx); background-color: var(--bgp); background-image: radial-gradient(var(--dots) 1px, transparent 1.3px);
+      background-size: 18px 18px; padding-top: 0;
+    }
+    ::selection { background: var(--olive); color: #fff; }
+    :focus-visible { outline: 3px solid var(--coral); outline-offset: 2px; border-radius: 2px; }
+    a { color: var(--coral-deep); text-underline-offset: 3px; }
+    a:hover { color: var(--tx); }
+    .mono, .meta, .section-number, .brand small, .hint, .ticker, .flash-out, .stat b { font-family: var(--font-data); }
+
+    /* faixa superior: ■ PORTFÓLIO ■ … como no site ------------------------------ */
+    .ticker {
+      margin: 0 calc(-1 * var(--s3)); padding: 6px var(--s3); display: flex; gap: 14px 22px; flex-wrap: wrap; align-items: center; justify-content: space-between;
+      font-size: .62rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--tx);
+      border-bottom: 1px solid var(--bd); background: var(--bgp);
+    }
+    .ticker span::before { content: ""; display: inline-block; width: 6px; height: 6px; margin-right: 8px; background: var(--coral); vertical-align: 1px; }
+
+    /* cabeçalho --------------------------------------------------------------- */
+    .topbar { padding: 18px 0 14px; border-bottom: 2px solid var(--bd); margin-bottom: 16px; align-items: flex-end; }
+    .brand { display: flex; align-items: center; gap: 14px; min-width: 0; }
+    .brand-mark {
+      width: 56px; height: 56px; flex: none; display: grid; place-items: center; position: relative;
+      background: var(--mark-bg); color: var(--mark-fg); border: 2px solid var(--bd); box-shadow: var(--shadow-sm);
+      font: 400 1.7rem/1 var(--font-display); padding: 0;
+    }
+    .brand-mark::after { content: "◇"; position: absolute; inset: 0; display: grid; place-items: center; color: var(--coral); font-size: 2.1rem; font-weight: 400; opacity: .9; }
+    .brand h1 { margin: 0; font: 400 clamp(2rem, 7vw, 3.1rem)/.86 var(--font-display); letter-spacing: -.01em; text-transform: uppercase; color: var(--tx); }
+    .brand h1 span { color: var(--olive); }
+    .brand small { display: block; margin-top: 8px; font-size: .62rem; font-weight: 700; letter-spacing: .16em; color: var(--muted); text-transform: uppercase; }
+    .brand small b { color: var(--coral-deep); }
+    .chip {
+      border-radius: 2px; background: var(--card); border: 2px solid var(--bd); color: var(--tx);
+      font: 700 .72rem var(--font-data); letter-spacing: .08em; text-transform: uppercase; box-shadow: var(--shadow-sm);
+    }
+    .chip .dot { border-radius: 0; background: var(--muted); }
+    .chip[data-state="online"] { background: var(--sage); border-color: var(--on-fill); color: var(--on-fill); }
+    .chip[data-state="online"] .dot { background: var(--on-fill); box-shadow: none; }
+    .chip[data-state="wait"] { background: var(--yolk); border-color: var(--on-fill); color: var(--on-fill); }
+    .chip[data-state="wait"] .dot { background: var(--on-fill); }
+    .chip[data-state="off"] { background: var(--coral); border-color: var(--on-fill); color: var(--on-fill); }
+    .chip[data-state="off"] .dot { background: var(--on-fill); }
+    .stop-mini {
+      border-radius: 2px; border: 2px solid var(--bd); background: var(--coral); color: var(--on-fill);
+      font: 700 .78rem var(--font-data); letter-spacing: .1em; text-transform: uppercase; box-shadow: var(--shadow-sm);
+    }
+    .stop-mini:hover { background: #ff7359; }
+    .stop-mini:active { transform: translate(2px, 2px); box-shadow: none; background: var(--coral-deep); color: #fff; }
+    .stop-mini:focus-visible { outline: 3px solid var(--bd); outline-offset: 2px; }
+    .conn-help { background: var(--card); border: 2px solid var(--bd); border-radius: 2px; color: var(--tx); box-shadow: var(--shadow-sm); font-family: var(--font-data); font-size: .78rem; }
+    .conn-help[data-state="off"] { background: var(--coral); border-color: var(--on-fill); }
+    .conn-help[data-state="wait"] { background: var(--yolk); border-color: var(--on-fill); }
+
+    /* painéis ------------------------------------------------------------------ */
+    .panel { background: var(--panel); border: 2px solid var(--bd); border-radius: 2px; box-shadow: var(--shadow); }
+    .panel-head { align-items: center; padding-bottom: 12px; border-bottom: 2px solid var(--bd); }
+    h2.label, h3.label {
+      font: 400 .95rem var(--font-display); letter-spacing: .02em; text-transform: uppercase; color: var(--tx);
+    }
+    h3.label { font-size: .85rem; }
+    .section-number { display: inline-block; margin-right: 10px; padding: 3px 6px; background: var(--mark-bg); color: var(--mark-fg); font: 700 .7rem var(--font-data); letter-spacing: .04em; vertical-align: 2px; }
+    .section-number::after { content: " //"; color: var(--coral); }
+    .panel-head .meta, .camera-heading .meta { font: 700 .62rem var(--font-data); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+    .panel-head .meta::before { content: "✦ "; color: var(--coral); }
+    .label { color: var(--tx); }
+    .a-cam { background: var(--panel); }
+    .camera-heading { padding: 2px 2px 10px; margin-bottom: 12px; }
+    .a-drive .panel-head, .a-poses > .panel-head { padding-bottom: 10px; border-bottom: 2px solid var(--bd); }
+
+    /* câmera: tela escura emoldurada, cantos verde-claro, tela de espera listrada */
+    .cam-frame { background: var(--ink-2); border: 2px solid var(--bd); border-radius: 0; outline: 6px solid var(--surface-3); outline-offset: -2px; }
+    .cam-frame::before { --c: var(--sage); }
+    .cam-frame img { background: var(--ink-2); }
+    .cam-overlay { background: repeating-linear-gradient(135deg, rgba(25,26,24,.94) 0 10px, rgba(41,42,40,.94) 10px 20px); }
+    .cam-overlay .msg { background: var(--card); color: var(--tx); border: 2px solid var(--bd); border-radius: 0; box-shadow: var(--shadow-sm); text-align: left; }
+    .cam-overlay span { color: var(--muted); font-family: var(--font-data); font-size: .72rem; }
+    .cam-overlay strong { font: 400 1rem var(--font-display); text-transform: uppercase; }
+    .cam-overlay[data-kind="off"] .msg { border-color: var(--on-fill); background: var(--coral); }
+    .cam-overlay[data-kind="off"] strong, .cam-overlay[data-kind="off"] span { color: var(--on-fill); }
+    .cam-overlay[data-kind="wait"] .msg { background: var(--yolk); border-color: var(--on-fill); }
+    .cam-overlay[data-kind="wait"] strong, .cam-overlay[data-kind="wait"] span { color: var(--on-fill); }
+
+    /* botões -------------------------------------------------------------------- */
+    .btn, .qual-btn, .flash-bar .btn-flash, .strobe-bar .qual-btn {
+      background: var(--card); color: var(--tx); border: 2px solid var(--bd); border-radius: 2px; box-shadow: var(--shadow-sm);
+      font-family: var(--font-ui); font-weight: 700; letter-spacing: .01em;
+      transition: transform 80ms var(--ease), box-shadow 80ms var(--ease), background var(--dur) var(--ease);
+    }
+    .btn:hover, .qual-btn:hover, .flash-bar .btn-flash:hover, .strobe-bar .qual-btn:hover { background: var(--sage); border-color: var(--on-fill); color: var(--on-fill); }
+    .btn:active, .btn.active, .qual-btn:active, .flash-bar .btn-flash:active { transform: translate(2px, 2px); box-shadow: none; background: var(--olive); color: #fff; border-color: var(--bd); }
+    .qual-btn[aria-pressed="true"], .flash-bar .btn-flash[aria-pressed="true"], .strobe-bar .qual-btn[aria-pressed="true"] { background: var(--olive); color: #fff; border-color: var(--bd); box-shadow: inset 0 0 0 2px var(--bd), var(--shadow-sm); }
+    .flash-bar .btn-flash[aria-pressed="true"], .btn-flash[aria-pressed="true"] { background: var(--yolk); color: var(--on-fill); box-shadow: inset 0 0 0 2px var(--on-fill), var(--shadow-sm); }
+    .btn-warn { background: var(--yolk); border-color: var(--on-fill); color: var(--on-fill); }
+    .btn-warn:hover { background: #f7d65f; }
+    .btn-danger { background: var(--coral); border-color: var(--on-fill); color: var(--on-fill); }
+    .btn-danger:hover { background: #ff7359; }
+    .btn:disabled, [data-controls-v2]:disabled { background: var(--dis-bg); color: var(--dis-fg); box-shadow: none; opacity: .75; cursor: not-allowed; border-color: var(--dis-fg); }
+    .flash-bar, .strobe-bar { gap: 10px; }
+    .flash-bar .btn-flash, .strobe-bar .qual-btn { font-size: .76rem; font-weight: 700; min-height: 38px; }
+    .flash-out, .strobe-bar output { font: 700 .68rem var(--font-data); color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+    .flash-out[data-on="true"] { color: var(--coral-deep); }
+
+    /* qualidade / ferramentas da câmera */
+    .qual-bar { border-top: 2px solid var(--bd); padding-top: 8px; gap: 6px; }
+    .qual-bar .qual-label { font: 700 .62rem var(--font-data); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+    .qual-bar .qual-btn { min-height: 40px; background: transparent; border: 2px solid transparent; box-shadow: none; color: var(--muted); font-size: .72rem; }
+    .qual-bar .qual-btn:hover { background: var(--surface-3); color: var(--tx); border-color: var(--bd); }
+    .qual-bar .qual-btn[aria-pressed="true"] { background: var(--press-bg); color: var(--press-fg); border-color: var(--bd); box-shadow: none; }
+    .camera-tools { border-top: 2px solid var(--bd); margin-top: 10px; }
+    .camera-tool > summary { font: 700 .7rem var(--font-data); letter-spacing: .12em; text-transform: uppercase; color: var(--tx); }
+    .camera-tool[open] > summary, .camera-tool > summary:hover { color: var(--on-fill); background: var(--sage); }
+    .tool-popover { background: var(--panel); border: 2px solid var(--bd); border-top: 0; border-radius: 0; box-shadow: var(--shadow); }
+    #strobeWarn { font-family: var(--font-data); }
+
+    /* sliders ---------------------------------------------------------------------- */
+    input[type=range] { --acc: var(--olive); accent-color: var(--olive); }
+    input[type=range][data-on="true"] { --acc: var(--yolk); }
+    input[type=range]::-webkit-slider-runnable-track { height: 10px; border-radius: 0; border: 2px solid var(--bd); background: linear-gradient(to right, var(--acc) var(--fill, 100%), var(--card) var(--fill, 100%)); }
+    input[type=range]::-moz-range-track { height: 10px; border-radius: 0; border: 2px solid var(--bd); background: var(--card); }
+    input[type=range]::-moz-range-progress { height: 10px; border-radius: 0; background: var(--acc); }
+    input[type=range]::-webkit-slider-thumb { width: 22px; height: 28px; margin-top: -11px; border-radius: 0; background: var(--coral); border: 2px solid var(--bd); box-shadow: var(--shadow-sm); }
+    input[type=range]::-moz-range-thumb { width: 18px; height: 26px; border-radius: 0; background: var(--coral); border: 2px solid var(--bd); }
+    .flash-bar input[type=range], .strobe-bar input[type=range], .opt-bri input { accent-color: var(--olive); }
+
+    /* joystick: mira de papel + manche de verde-oliva -------------------------------- */
+    .joy {
+      border: 3px solid var(--bd); box-shadow: var(--shadow);
+      background:
+        linear-gradient(var(--cross), var(--cross)) center / 2px 100% no-repeat,
+        linear-gradient(var(--cross), var(--cross)) center / 100% 2px no-repeat,
+        radial-gradient(circle, transparent 0 62%, var(--ring) 62.4% 63.2%, transparent 63.6%),
+        radial-gradient(circle, transparent 0 30%, var(--ring) 30.4% 31%, transparent 31.4%),
+        repeating-linear-gradient(135deg, var(--hatch-a) 0 8px, var(--hatch-b) 8px 16px);
+    }
+    .joy:hover { border-color: var(--bd); }
+    .joy.live { border-color: var(--bd); box-shadow: 4px 4px 0 var(--coral); }
+    .joy-stick { background: var(--olive); border: 3px solid var(--bd); box-shadow: var(--shadow-sm); }
+    .joy-stick::after { content: "✦"; position: absolute; inset: 0; display: grid; place-items: center; color: var(--paper); font-size: 1.5rem; }
+    .dpad .btn.mid { color: var(--coral-deep); }
+    /* direcional com setas: troca com o joystick redondo pelo botãozinho do canto (escolha lembrada neste navegador) */
+    .drive-row { position: relative; }
+    .joy[hidden], .dpad[hidden] { display: none !important; }
+    .dpad { --hit: 56px; }
+    @media (max-width: 479px) { .dpad { --hit: 52px; } }
+    @media (orientation: landscape) and (max-height: 540px) { .dpad { --hit: 42px; gap: 3px; } }
+    .dpad .btn { min-width: 0; min-height: 0; }
+    .dpad .btn svg { width: 26px; height: 26px; fill: currentColor; }
+    .dpad .btn.active { background: var(--olive); color: #fff; }
+    .dpad .btn.mid svg { width: 18px; height: 18px; }
+    .drive-mode { position: absolute; right: 0; top: 0; width: 36px; height: 36px; padding: 0; display: grid; place-items: center;
+      border: 0; background: none; color: var(--muted); cursor: pointer; -webkit-tap-highlight-color: transparent; opacity: .75; }
+    .drive-mode:hover, .drive-mode:focus-visible { opacity: 1; color: var(--tx, var(--text)); }
+    .drive-mode:focus-visible { outline: 2px solid var(--coral); outline-offset: -3px; border-radius: 6px; }
+    .drive-mode svg { width: 20px; height: 20px; }
+    .drive-mode .ic-joy { display: none; }
+    .drive-mode[data-mode="pad"] .ic-pad { display: none; }
+    .drive-mode[data-mode="pad"] .ic-joy { display: block; }
+    .hint { color: var(--muted); font-size: .68rem; letter-spacing: .06em; text-transform: uppercase; }
+    .hint b { color: var(--tx); }
+    #inputSource { color: var(--tx); }
+
+    /* poses -------------------------------------------------------------------------- */
+    .btn-pose { background: var(--card); box-shadow: var(--shadow-sm); font-family: var(--font-display); font-weight: 400; text-transform: uppercase; letter-spacing: .01em; font-size: .72rem; }
+    .btn-pose.alt { background: var(--panel); }
+    .btn-pose .pose-icon { filter: var(--icon-filter); }
+    .btn-pose:hover .pose-icon { filter: var(--icon-filter); }
+    .btn-pose:active .pose-icon { filter: none; }
+    .more-poses { border-top: 2px dashed var(--bd); }
+    .more-poses summary { font: 700 .7rem var(--font-data); letter-spacing: .14em; text-transform: uppercase; color: var(--tx); }
+    .more-poses summary::after { color: var(--coral-deep); }
+    .pose-note { font-family: var(--font-data); font-size: .68rem; color: var(--muted); }
+
+    /* Configurações / avançado -------------------------------------------------------- */
+    details.adv > summary { font: 400 .95rem var(--font-display); text-transform: uppercase; background: var(--sage); color: var(--on-fill); border-radius: 0; }
+    details.adv > summary:hover { background: var(--olive); color: #fff; }
+    details.adv > summary small { font: 600 .62rem var(--font-data); text-transform: none; letter-spacing: .02em; color: inherit; opacity: .8; }
+    details.adv[open] > summary { border-bottom: 2px solid var(--bd); }
+    .a-adv { overflow: hidden; }
+    .stat { background: var(--card); border: 2px solid var(--bd); border-radius: 0; color: var(--muted); font: 700 .62rem var(--font-data); letter-spacing: .08em; text-transform: uppercase; }
+    .stat b { color: var(--tx); font-size: .9rem; letter-spacing: 0; text-transform: none; }
+    .stat[data-q="good"] b { color: var(--signal); }
+    .stat[data-q="mid"] b { color: var(--amber); }
+    .stat[data-q="bad"] b { color: var(--danger); }
+    .bars i { background: var(--bars); }
+    .ip-form input, #settingsDialog input[type=number], .adv-body input[type=number], .adv-body input[type=text] {
+      background: var(--card); color: var(--tx); border: 2px solid var(--bd); border-radius: 0; font-family: var(--font-data);
+    }
+    .ip-form input::placeholder { color: #8b8d85; }
+    .ip-form input:focus-visible { border-color: var(--coral); }
+    .ip-err { color: var(--coral-deep); font-family: var(--font-data); }
+    .leg, .trim-row { background: var(--card); border: 2px solid var(--bd); border-radius: 0; }
+    .leg .arc { stroke: var(--surface-3); }
+    .leg .neutral { stroke: var(--olive); opacity: 1; }
+    .leg .needle { stroke: var(--tx); }
+    .leg .hub { fill: var(--coral); }
+    .leg-name, .trim-row .who { font-family: var(--font-display); font-weight: 400; text-transform: uppercase; letter-spacing: .01em; }
+    .leg-us .off-pos, .trim-row .us { color: var(--amber); }
+    .confirm { background: var(--yolk); border: 2px solid var(--on-fill); border-radius: 0; }
+    .note, details.sub > summary { color: var(--muted); }
+    details.sub > summary { font-family: var(--font-data); letter-spacing: .12em; }
+    details.sub > summary:hover { color: var(--tx); }
+    .log-view { background: var(--ink-2); color: var(--sage); padding: 10px; border: 2px solid var(--bd); font-size: 11px; }
+    .gait-picker { border-top: 2px dashed var(--bd); }
+    .gait-picker .label { font-family: var(--font-display); text-transform: uppercase; }
+    #settingsDialog { background: var(--bgp); color: var(--tx); border: 3px solid var(--bd); border-radius: 0; box-shadow: 8px 8px 0 var(--sh); }
+    #settingsDialog::backdrop { background: rgba(41,42,40,.65); background-image: repeating-linear-gradient(135deg, transparent 0 8px, rgba(255,255,255,.04) 8px 16px); }
+    .settings-heading { background: var(--head-bg); color: var(--head-fg); border-bottom: 3px solid var(--bd); }
+    .settings-heading h2 { font: 400 1rem var(--font-display); text-transform: uppercase; }
+    .settings-heading .settings-button { color: var(--head-fg); }
+    .settings-button { color: var(--tx); border-radius: 0; }
+    .settings-button:hover { background: var(--sage); color: var(--on-fill); }
+
+    /* avisos ---------------------------------------------------------------------------- */
+    .toast { background: var(--card); color: var(--tx); border: 2px solid var(--bd); border-left-width: 8px; border-radius: 0; box-shadow: var(--shadow); font-family: var(--font-data); font-size: .8rem; font-weight: 700; }
+    .toast[data-kind="ok"] { border-left-color: var(--olive); }
+    .toast[data-kind="warn"] { border-left-color: var(--yolk); }
+    .toast[data-kind="error"] { border-left-color: var(--coral); }
+
+    /* responsivo: mantém as regras de layout do painel, só ajusta o que mudou de tamanho */
+    @media (min-width: 980px) {
+      body { padding-left: var(--s5); padding-right: var(--s5); }
+      .ticker { margin: 0 calc(-1 * var(--s5)); padding: 6px var(--s5); }
+    }
+    @media (max-width: 479px) {
+      .topbar { flex-wrap: wrap; align-items: stretch; gap: 12px; padding: 14px 0 12px; }
+      .brand { width: 100%; gap: 10px; }
+      .brand h1 { white-space: nowrap; font-size: 2.1rem; }
+      .top-right { width: 100%; justify-content: space-between; flex-wrap: nowrap; gap: 6px; }
+      .top-right .chip { flex: 1 1 auto; justify-content: center; font-size: .66rem; }
+      .topbar .brand small { display: block; font-size: .5rem; letter-spacing: .1em; line-height: 1.5; }
+      .brand-mark { width: 44px; height: 44px; font-size: 1.3rem; }
+      .brand-mark::after { font-size: 1.6rem; }
+      .brand h1 { font-size: 2rem; }
+      .ticker { font-size: .54rem; gap: 6px 12px; }
+      .ticker span:nth-child(n+3) { display: none; }
+    }
+    @media (orientation: landscape) and (max-height: 540px) {
+      .ticker { display: none; }
+      .brand-mark { width: 38px; height: 38px; font-size: 1.1rem; }
+      .brand h1 { font-size: 1.6rem; }
+      .brand small { display: none; }
+      .panel { box-shadow: var(--shadow-sm); }
+    }
+    @media (forced-colors: active) { .btn, .chip, .panel, .joy { border: 2px solid ButtonText; } }
+
+    /* ==========================================================================
+       COCKPIT: direcional à ESQUERDA, câmera no centro, poses à direita.
+       Uma página só; o layout muda por tamanho/orientação (revisão do agente gamer).
+       ========================================================================== */
+    .toast { pointer-events: none; }                       /* aviso nunca bloqueia o Parar */
+    .flash-bar .btn-flash, .strobe-bar .qual-btn { min-height: 44px; }
+    .drive-opts { margin-top: var(--s3); border-top: 2px dashed var(--bd); padding-top: 4px; }
+    .drive-opts > summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; justify-content: space-between;
+      font: 700 .7rem var(--font-data); letter-spacing: .14em; text-transform: uppercase; color: var(--tx); list-style: none; }
+    .drive-opts > summary::-webkit-details-marker { display: none; }
+    .drive-opts > summary::after { content: '−'; font: 500 1.3rem var(--font-data); color: var(--coral-deep); }
+    .drive-opts:not([open]) > summary::after { content: '+'; }
+    :root[data-theme="dark"] .drive-opts > summary::after { color: var(--coral); }
+    .stop-mini { min-height: 48px; padding: 0 18px; font-size: .86rem; }
+
+    /* ---- tablet (600-979): câmera em cima, direcional à esquerda e poses à direita ---- */
+    @media (min-width: 600px) and (max-width: 979px) {
+      .main { max-width: 900px; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-areas: "cam cam" "drive poses" "adv adv"; align-items: start; }
+      .joy { --joy: 180px; }
+      .poses { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    /* ---- PC (>=980): [movimento] [câmera] [poses], nada de coluna escondida ---- */
+    @media (min-width: 980px) {
+      .main { max-width: 1760px; grid-template-columns: 290px minmax(0, 1fr) 310px; grid-template-areas: "drive cam poses" "adv adv adv"; align-items: start; gap: 16px; }
+      .a-drive { position: sticky; top: 12px; }
+      .joy { --joy: 210px; }
+      .poses { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .btn-pose { min-height: 104px; }
+      /* Visão de campo no desktop: 70% do tamanho anterior, mantendo 3:4. */
+      .cam-frame { width: min(70%, calc((100dvh - 330px) * 0.525)); margin: 0 auto; }
+      .drive-opts { border-top: 0; }
+    }
+    @media (min-width: 980px) { .topbar, .conn-help { max-width: 1760px; } }
+    @media (min-width: 1500px) { .main { grid-template-columns: 320px minmax(0, 1fr) 340px; } }
+
+    /* ---- celular em retrato: câmera, joystick, poses (3 colunas, em largura total) ---- */
+    @media (max-width: 599px) and (orientation: portrait) {
+      body { padding-bottom: calc(92px + env(safe-area-inset-bottom)); }
+      .ticker span:nth-child(n+2) { display: none; }
+      .main { grid-template-columns: minmax(0, 1fr); grid-template-areas: "cam" "drive" "poses" "adv"; gap: 10px; }   /* poses embaixo do joystick, em largura total: a grade de 3 colunas precisa de espaço */
+      .a-drive { padding: 10px; }
+      .a-drive .panel-head, .a-poses > .panel-head { flex-wrap: wrap; row-gap: 2px; }
+      .a-drive .panel-head .meta, .a-poses .panel-head .meta { display: none; }
+      .joy { --joy: clamp(116px, 36vw, 150px); margin: 0 auto; }
+      .poses { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+      .btn-pose { min-height: 72px; padding: 6px 2px; font-size: .62rem; gap: 2px; }
+      .btn-pose .pose-icon { width: 46px; height: 32px; }
+      .a-poses { padding: 10px; }
+      .more-poses { margin-top: 6px; }
+      /* PARAR: no cabeçalho, canto superior direito, rolando com a página (não fica fixo na tela) */
+      .topbar { position: relative; }
+      .brand { min-height: 60px; padding-right: 108px; }      /* a linha do nome sempre cabe o Parar (44 px) e nunca cobre a linha de baixo */
+      .brand > div { min-width: 0; }
+      .brand h1 { overflow: hidden; text-overflow: ellipsis; }   /* nome de 24 letras vira "…" em vez de estourar a tela */
+      .stop-mini { position: absolute; top: 8px; right: 12px; width: auto; min-height: 44px; padding: 0 12px; font-size: .78rem; letter-spacing: .08em; }
+      .stop-mini svg { width: 16px; height: 16px; }
+    }
+
+    /* ---- celular em paisagem: [joystick] [câmera] [poses + PARAR] ---- */
+    @media (orientation: landscape) and (max-height: 540px) {
+      body { padding-left: max(24px, env(safe-area-inset-left)); padding-right: max(24px, env(safe-area-inset-right)); padding-bottom: 8px; }
+      .conn-help { display: none; }
+      .topbar { padding: 6px 0; margin-bottom: 8px; border-bottom-width: 2px; }
+      .brand-mark { width: 34px; height: 34px; font-size: 1rem; }
+      .brand h1 { font-size: 1.5rem; }
+      .opt-bar { display: none; }
+      .camera-heading { padding-bottom: 4px; margin-bottom: 6px; }
+      .cam-frame { width: min(100%, calc((100dvh - 150px) * 3 / 4)); margin: 0 auto; }
+      .main { --right-w: clamp(190px, 27vw, 250px); grid-template-columns: minmax(176px, .72fr) minmax(0, 1.9fr) var(--right-w);
+        grid-template-areas: "drive cam poses" "adv adv adv"; align-items: start; }
+      .a-drive { padding: 8px; }
+      .a-drive .panel-head .meta { display: none; }
+      .joy { --joy: clamp(100px, 38vh, 132px); margin: 0 auto; }
+      .poses { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+      .btn-pose { min-height: 54px; padding: 3px 2px; font-size: .54rem; }
+      .btn-pose .pose-icon { width: 36px; height: 24px; }
+      .a-poses { padding-bottom: 10px; }
+      .stop-mini { position: static; width: auto; min-height: 40px; padding: 0 12px; font-size: .78rem; letter-spacing: .08em; }   /* paisagem: cabeçalho de uma linha; o Parar é o último item do grupo da direita (order: 99), sem sobrepor ninguém */
+    }
+
+    /* HUD sobre a câmera: estado do robô sem abrir Configurações (fundo fixo escuro: a câmera é escura nos dois temas) */
+    .cam-hud { position: absolute; z-index: 6; left: 8px; right: 8px; top: 8px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; pointer-events: none;
+      font: 700 .62rem/1 var(--font-data); letter-spacing: .08em; text-transform: uppercase; color: #f1efe8; }
+    .hud-item, .hud-drive { background: rgba(25,26,24,.78); border: 1px solid rgba(232,231,227,.45); padding: 4px 7px; display: inline-flex; align-items: center; gap: 6px; }
+    .hud-dot { width: 8px; height: 8px; background: #8b8d85; display: inline-block; }
+    #hudLink[data-state="online"] .hud-dot { background: var(--sage); }
+    #hudLink[data-state="wait"] .hud-dot { background: var(--yolk); }
+    #hudLink[data-state="off"] .hud-dot { background: var(--coral); }
+    .hud-item[data-q="good"] { color: var(--sage); } .hud-item[data-q="mid"] { color: var(--yolk); } .hud-item[data-q="bad"] { color: #ff8a73; }
+    .hud-drive { margin-left: auto; }
+    .hud-drive em { font-style: normal; color: #c9cbc1; }
+    .hud-bar { position: relative; width: 34px; height: 8px; background: rgba(232,231,227,.18); }
+    .hud-bar::after { content: ""; position: absolute; left: 50%; top: -1px; bottom: -1px; width: 1px; background: rgba(232,231,227,.6); }
+    .hud-bar b { position: absolute; top: 0; bottom: 0; left: 50%; width: 0; background: var(--sage); }
+    @media (max-width: 479px) { .cam-hud { font-size: .54rem; gap: 4px; } .hud-drive em { display: none; } }
+    @media (orientation: landscape) and (max-height: 540px) { .hud-drive em { display: none; } }
+
+    .gait-options .gait-mk3 { grid-column: 1 / -1; flex-direction: column; gap: 2px; }
+    .gait-options .gait-mk3 small { display: block; font: 600 .6rem var(--font-data); letter-spacing: .08em; text-transform: uppercase; opacity: .8; }
+    .gait-more { margin-top: 12px; border-top: 2px dashed var(--bd); }
+    .gait-more > summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; gap: 8px; list-style: none;
+      font: 600 .72rem var(--font-data); letter-spacing: .08em; text-transform: uppercase; }
+    .gait-more > summary::-webkit-details-marker { display: none; }
+    .gait-more > summary span { flex: 1; }
+    .gait-more > summary em { font-style: normal; opacity: .75; }
+    .gait-more > summary::after { content: '+'; font: 500 1.3rem var(--font-data); color: var(--coral-deep); }
+    .gait-more[open] > summary::after { content: '\2212'; }
+    :root[data-theme="dark"] .gait-more > summary::after { color: var(--coral); }
+    .gait-main { min-height: 56px; }
+    .gait-more .gait-picker { margin-top: 12px; }
+
+    /* barra da câmera: lanterna, strobo e qualidade numa linha só, só com ícones (texto fica em title e aria-label) */
+    .cam-toolbar.camera-tools { display: flex; align-items: center; gap: 8px; margin-top: 8px; padding: 0 4px; border-top: 0; position: relative; }
+    .cam-ic { flex: none; width: 40px; height: 40px; padding: 0; display: grid; place-items: center; border: 2px solid var(--bd, var(--line-strong)); border-radius: 8px;
+      background: var(--card, var(--surface)); color: var(--tx, var(--text)); cursor: pointer; list-style: none; -webkit-tap-highlight-color: transparent; }
+    .cam-ic::-webkit-details-marker { display: none; }
+    .cam-ic svg { width: 20px; height: 20px; }
+    .cam-ic:hover { background: var(--sage, #35412b); color: var(--on-fill, var(--text)); }
+    .cam-ic:focus-visible { outline: 2px solid var(--coral, #ef593f); outline-offset: 2px; }
+    .cam-ic[aria-pressed="true"], .camera-tool[open] > .cam-ic { background: var(--yolk, #e3b341); color: var(--on-fill, #202711); }
+    .cam-toolbar .camera-tool { flex: none; min-width: 0; }
+    .cam-range { flex: 1 1 0; min-width: 48px; width: 100%; min-height: 40px; margin: 0; accent-color: var(--olive, #a6b57a); }
+    .cam-strobe + .cam-range, .cam-range.cam-strobe { accent-color: #e3b341; }
+    .cam-toolbar .tool-popover { top: calc(100% + 4px); left: 0; right: 0; border-radius: 8px; border-top: 1px solid var(--line-strong, var(--bd)); }
+    @media (max-width: 379px) { .cam-toolbar.camera-tools { gap: 5px; } .cam-ic { width: 36px; height: 36px; } }
+    /* Lanterna e strobo ficam disponíveis também em paisagem. */
+
+    /* Poses K9: três abas (Poses, Ações, Animações), grade de 3 colunas com botões menores e sem o "Mais poses +" */
+    .sound-bar { display:flex; align-items:center; gap:12px; margin-bottom:10px; }
+    .sound-bar input { flex:1; min-width:0; width:100%; min-height:44px; }
+    .btn-pose { position:relative; }
+    .keyboard-menu summary { cursor:pointer; font-weight:700; padding:10px 0; }
+    .keyboard-bindings { display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:8px 24px; }
+    .keyboard-bindings > div { display:flex; justify-content:space-between; align-items:center; gap:12px; border-bottom:1px solid var(--bd); padding:8px 0; }
+    .keyboard-bindings dd { margin:0; }
+    .keyboard-bindings kbd { display:inline-block; min-width:32px; padding:5px 8px; border:1px solid currentColor; border-bottom-width:3px; border-radius:4px; text-align:center; }
+    .sound-mute { flex:0 0 48px; width:48px; min-height:44px; padding:8px; border:2px solid currentColor; font-weight:800; }
+    .btn-pose[aria-pressed="true"] { background:var(--olive, #6e8a3a); color:#fff; }
+    .sound-mute[aria-pressed="true"] { background:#842d31; color:#fff; }
+    .pose-tabs { display: flex; flex-wrap:wrap; gap: 4px; margin: 0 0 8px; }
+    .pose-tab { flex: 1 1 70px; min-width: 0; min-height: 36px; padding: 0 4px; border: 2px solid var(--bd, var(--line-strong)); border-radius: 8px; background: transparent;
+      color: var(--muted); font: 700 .66rem var(--font-data, inherit); letter-spacing: .08em; text-transform: uppercase; cursor: pointer; white-space: nowrap; }
+    .pose-tab:hover { color: var(--tx, var(--text)); }
+    .pose-tab[aria-selected="true"] { background: var(--olive, #6e8a3a); color: #fff; border-color: var(--bd, var(--line-strong)); }
+    .pose-tab:focus-visible { outline: 2px solid var(--coral, #ef593f); outline-offset: 2px; }
+    .a-poses .poses, .a-poses .poses[hidden] + .poses { margin-top: 0; }
+    .a-poses .poses[hidden] { display: none !important; }
+    .a-poses .poses { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; gap: 6px !important; }
+    .a-poses .poses-modos { margin-top: 8px; padding-top: 8px; border-top: 2px dashed var(--bd, var(--line)); }
+    .a-poses .btn-pose { min-height: 76px !important; padding: 6px 3px !important; gap: 3px !important; font-size: .6rem !important; letter-spacing: .02em !important; line-height: 1.15 !important; overflow-wrap: anywhere; }
+    .a-poses .btn-pose .pose-icon { width: 52px !important; height: 38px !important; }
+    .a-poses .btn-pose .npc-icon, .a-poses .btn-pose .rand-icon { width: 30px; height: 30px; }
+    .a-poses .npc-wrap .npc-btn { min-height: 76px !important; }
+    .a-poses .npc-gear { top: 1px; right: 1px; width: 30px; height: 30px; }
+    .a-poses .npc-gear svg { width: 18px; height: 18px; }
+
+    /* Voz: botãozinho no cabeçalho do painel, no lugar do texto "Ações rápidas" */
+    .a-poses .panel-head { align-items: center; }
+    .a-poses .voz-mini { min-height: 32px; min-width: 0; padding: 0 10px; flex-direction: row; gap: 6px; font-size: .68rem; letter-spacing: .08em; text-transform: uppercase; box-shadow: none; }
+    .a-poses .voz-mini svg { width: 16px; height: 16px; flex: none; }
+    .a-poses .voz-mini.on { outline: 2px solid var(--coral, #ef593f); outline-offset: -2px; }
+    /* Painéis do cockpit com a mesma base e identificação compacta da marcha. */
+    .gait-badge { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:20px; padding:12px 16px; border:2px solid var(--sage); background:var(--surface-3); font-family:var(--font-data); text-transform:uppercase; letter-spacing:.12em; }
+    button.gait-badge { width:100%; cursor:pointer; text-align:left; color:var(--tx); border-radius:0; box-shadow:none; transition:filter .15s ease; }
+    button.gait-badge:hover:not(:disabled) { filter:brightness(1.12); }
+    button.gait-badge:focus-visible { outline:2px solid var(--coral); outline-offset:2px; }
+    .gait-var-row { display:grid; grid-template-columns:repeat(5, minmax(0, 1fr)); gap:6px; margin-top:8px; }
+    .gait-var-btn { aspect-ratio:1 / 1; min-height:44px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; padding:2px;
+      font:700 1.05rem var(--font-data); border:2px solid var(--bd); border-radius:8px;
+      background:var(--surface-3); color:var(--tx); cursor:pointer; transition:all .15s ease; box-shadow:0 2px 0 var(--sh); }
+    .gait-var-btn .gait-var-num { line-height:1; font-weight:800; font-size:1.05rem; }
+    .gait-var-btn .gait-var-lbl { line-height:1; font-size:.56rem; text-transform:uppercase; letter-spacing:.04em; opacity:.85; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .gait-var-btn:hover:not(:disabled) { background:var(--sage); color:var(--on-fill); border-color:var(--sage); }
+    .gait-var-btn[aria-pressed="true"] { background:var(--olive, #6e8a3a); color:#fff; border-color:var(--sage);
+      outline:2px solid var(--coral); box-shadow:none; transform:translateY(2px); }
+    .gait-var-btn[aria-pressed="true"] .gait-var-lbl { opacity:1; font-weight:700; }
+    .gait-var-btn.pending { opacity:.7; animation:pulse 1s infinite alternate; }
+    .gait-var-btn:disabled { opacity:.45; cursor:not-allowed; }
+    .gait-var-status { margin-top:6px; font-size:.68rem; min-height:1.2em; opacity:.85; }
+    .robot-summary { margin-top:18px; padding-top:16px; border-top:2px solid var(--bd); }
+    .robot-summary h3 { margin:0 0 12px; font:700 .8rem var(--font-data); letter-spacing:.12em; text-transform:uppercase; }
+    .robot-summary dl { margin:0; display:grid; gap:12px; font: .8rem var(--font-data); }
+    .robot-summary dl > div { display:flex; justify-content:space-between; align-items:center; gap:12px; }
+    .robot-summary dt { color:var(--muted); }
+    .robot-summary dd { margin:0; text-align:right; font-weight:700; }
+    .gait-badge strong { color:var(--sage); font-size:1.2rem; }
+    @media (min-width:980px) and (min-height:541px) {
+      .main { align-items:stretch; }
+      .a-drive, .a-cam, .a-poses { align-self:stretch; position:relative; top:auto; }
+      .a-drive { display:flex; flex-direction:column; }
+      .a-drive .drive-opts { margin-top:8px; padding-top:0; }
+      .a-drive .gait-badge { flex-shrink:0; }
+      .a-poses { border-bottom:4px solid var(--sage); }
+    }
+    .top-right .device-chip { flex:0 0 auto; min-height:30px; padding:5px 9px; font-size:.7rem; letter-spacing:.06em; box-shadow:none; }
+    .top-right .device-chip .dot { width:7px; height:7px; }
+    /* Faixa 15–100: 20 = 5,88% e 80 = 76,47% do percurso. */
+    #driveSpeed::-webkit-slider-runnable-track { background:linear-gradient(to right, #79b7cf 0 5.882353%, var(--sage) 5.882353% 76.470588%, #ef942b 76.470588% 100%); }
+    #driveSpeed::-moz-range-track { background:linear-gradient(to right, #79b7cf 0 5.882353%, var(--sage) 5.882353% 76.470588%, #ef942b 76.470588% 100%); }
+    #driveSpeed::-moz-range-progress { background:transparent; }
+    #speedCold { color:#79b7cf; margin-left:6px; }
+    #speedCold svg { width:17px; height:17px; vertical-align:-3px; }
+    #driveSpeedLabel[data-cold="true"] { color:#79b7cf; }
+    #driveSpeedLabel[data-danger="true"] { color:#ef942b; }
+    .brand-mark::after { content:none; }
+    .brand-mark img { display:block; width:100%; height:100%; object-fit:contain; }
+    .brand-mark { background:#111210; }
+    @media (orientation:landscape) and (max-height:540px) {
+      body { padding:6px max(10px, env(safe-area-inset-right)) 6px max(10px, env(safe-area-inset-left)); }
+      .ticker, .brand small { display:none; }
+      .topbar { min-height:44px; margin-bottom:6px; padding:0 0 6px; flex-wrap:nowrap; }
+      .brand { min-height:36px; gap:8px; }
+      .brand h1 { font-size:1.25rem; }
+      .top-right { flex-wrap:nowrap; gap:6px; }
+      .main { grid-template-columns:minmax(170px,1fr) minmax(190px,1.25fr) minmax(210px,1.2fr); grid-template-rows:minmax(0,1fr); height:calc(100dvh - 68px); gap:8px; align-items:stretch; }
+      .a-drive, .a-poses, .a-cam { min-height:0; padding:8px; position:static; overflow:auto; }
+      .panel-head { margin-bottom:8px; padding-bottom:8px; }
+      .panel-head .label { font-size:.72rem; letter-spacing:.04em; }
+      .panel-head .section-number, .camera-heading .meta { display:none; }
+      .a-drive { display:block; }
+      .a-drive .drive-opts { margin-top:6px; padding-top:0; }
+      .gait-badge { margin-top:8px; padding:6px 10px; }
+      .robot-summary { margin-top:10px; padding-top:10px; }
+      /* Vídeo ocupa toda a altura útil em paisagem; controles ficam sobrepostos. */
+      .main { grid-template-columns:minmax(170px,1fr) calc((100dvh - 12px) * .75) minmax(210px,1fr); }
+      .topbar { position:relative; z-index:8; pointer-events:none; }
+      .topbar .brand, .topbar .top-right { pointer-events:auto; }
+      .a-cam { position:fixed; top:6px; bottom:6px; left:50%; transform:translateX(-50%); width:calc((100dvh - 12px) * .75); padding:0; overflow:hidden; z-index:2; }
+      .a-cam .camera-heading { display:none; }
+      .a-cam .cam-frame { width:100%; height:100%; margin:0; border:0; outline:0; }
+      .a-cam .cam-toolbar { position:absolute; bottom:6px; left:6px; right:6px; margin:0; padding:4px; z-index:7; background:rgba(17,18,16,.65); }
+      .a-cam .cam-hud { top:48px; }
+
+      .pose-tabs { gap:4px; }
+      .pose-tab { min-height:38px; padding:6px 3px; font-size:.6rem; }
+      .poses { grid-template-columns:repeat(3,minmax(0,1fr)); }
+      .voz-mini { min-height:36px; padding:4px 8px; }
+      .cam-hud { font-size:.5rem; gap:3px; left:5px; right:5px; top:5px; }
+      .hud-item { padding:3px; gap:3px; }
+      .hud-drive { display:none; }
+      .cam-overlay .msg { padding:8px; }
+      .cam-overlay .msg strong { font-size:.7rem; }
+      .cam-overlay .msg span { font-size:.6rem; }
+    }
+    .camera-side-dock { display:none; }
+    @media (orientation:landscape) and (max-height:540px) {
+      .topbar { display:grid; grid-template-columns:minmax(170px,1fr) calc((100dvh - 12px) * .75) minmax(210px,1fr); gap:8px; height:70px; min-height:0; border:0; padding:0; margin-bottom:6px; align-items:center; }
+      .topbar .brand { grid-column:1; min-width:0; }
+      .brand h1 { font-size:1rem; }
+      .brand-mark { width:30px; height:30px; flex-shrink:0; }
+      .top-right { grid-column:3; display:flex; flex-wrap:wrap; justify-content:flex-end; gap:5px; }
+      .top-right .device-chip { font-size:.58rem; min-height:24px; padding:3px 6px; }
+      .top-right .theme-toggle, .top-right .settings-button { width:36px; height:36px; }
+      .top-right .theme-toggle svg, .top-right .settings-button svg { width:18px; height:18px; }
+      .top-right .stop-mini { min-height:36px; padding:0 10px; font-size:.65rem; }
+      .main { height:calc(100dvh - 88px); }
+      .camera-side-dock { display:block; margin-top:14px; padding-top:10px; border-top:1px solid var(--bd); }
+      .camera-side-dock .cam-toolbar { position:static; margin:0; padding:0; background:none; display:grid; grid-template-columns:40px minmax(0,1fr); gap:4px 8px; }
+      .camera-side-dock .cam-ic { width:40px; height:40px; }
+      .camera-side-dock .cam-range { width:100%; min-width:0; min-height:40px; }
+      .camera-side-dock .cam-hud { position:static; margin-top:10px; font-size:.5rem; }
+      .camera-side-dock .hud-drive { display:none; }
+      .btn-pose { min-height:50px; }
+      .pose-tab { min-height:32px; }
+    }
+    @media (orientation:landscape) and (max-height:540px) {
+      body { --landscape-cam-width:min(calc((100dvh - 12px) * .75),44vw); }
+      .main, .topbar { grid-template-columns:minmax(0,1fr) var(--landscape-cam-width) minmax(0,1fr); }
+      .a-cam { width:var(--landscape-cam-width); }
+      .a-poses { display:flex; flex-direction:column; overflow:hidden; }
+      .a-poses > .panel-head, .a-poses > .pose-tabs { flex-shrink:0; }
+      .a-poses > .poses { flex:1 1 auto; min-height:0; overflow-y:auto; align-content:start; }
+      .a-poses .btn-pose, .a-poses .npc-wrap .npc-btn { min-height:54px !important; padding:3px 2px !important; font-size:.55rem !important; }
+      .a-poses .btn-pose .pose-icon { width:38px !important; height:28px !important; }
+      .camera-side-dock { flex-shrink:0; margin-top:8px; padding-top:6px; }
+      .camera-side-dock .cam-hud { margin-top:6px; }
+      .a-poses .panel-head { margin-bottom:6px; padding-bottom:6px; }
+      .top-right .device-chip { font-size:.55rem; padding:3px 4px; }
+    }
+    /* Direcional em cruz, com setas de haste e teclas bem definidas. */
+    .dpad { gap:5px; padding:8px; border-radius:20px; background:var(--surface-3); border:1px solid var(--bd); }
+    .dpad .btn { border-radius:8px; border:2px solid var(--bd); background:var(--panel); color:var(--tx); box-shadow:0 3px 0 var(--sh); }
+    .dpad .btn[data-dir="1,0"] { border-radius:14px 14px 5px 5px; }
+    .dpad .btn[data-dir="-1,0"] { border-radius:5px 5px 14px 14px; }
+    .dpad .btn[data-dir="0,-1"] { border-radius:14px 5px 5px 14px; }
+    .dpad .btn[data-dir="0,1"] { border-radius:5px 14px 14px 5px; }
+    .dpad .btn.mid { border-radius:8px; color:var(--coral); background:var(--surface-3); }
+    .dpad .btn.active, .dpad .btn:active { background:var(--sage); color:var(--on-fill); transform:translateY(2px); box-shadow:none; }
+    .drive-mode { z-index:2; }
+    .joy-direction { position:absolute; inset:0; border-radius:50%; pointer-events:none; opacity:0;
+      background:conic-gradient(from -55deg, transparent 0deg, #ef942b99 18deg, #ef942bd9 55deg, #ef942b99 92deg, transparent 110deg 360deg);
+      transition:opacity 100ms ease-out; will-change:transform,opacity; }
+    .joy-stick { z-index:1; }
+    @media (prefers-reduced-motion:reduce) { .joy-direction { transition:none; } }
+  </style>
+  <link rel="stylesheet" href="/npc.css">
+<link rel="icon" type="image/svg+xml" href="/assets/brand/k9-logo.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/brand/favicon-32.png">
+<link rel="apple-touch-icon" href="/assets/brand/apple-touch-icon.png">
+<link rel="manifest" href="/manifest.webmanifest">
+  <link rel="stylesheet" href="/experience.css">
+</head>
+<body>
+
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+    <defs>
+      <symbol id="i-up" viewBox="0 0 24 24"><path d="M6 15l6-6 6 6" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+      <symbol id="i-stop" viewBox="0 0 24 24"><rect x="5" y="5" width="14" height="14" rx="2.5" fill="currentColor"/></symbol>
+      <symbol id="i-octagon" viewBox="0 0 24 24"><path d="M8.2 2.5h7.6l5.7 5.7v7.6l-5.7 5.7H8.2l-5.7-5.7V8.2z" fill="currentColor" opacity=".25"/><path d="M8.2 2.5h7.6l5.7 5.7v7.6l-5.7 5.7H8.2l-5.7-5.7V8.2z" fill="none" stroke="currentColor" stroke-width="2"/><rect x="8" y="8" width="8" height="8" rx="1.5" fill="currentColor"/></symbol>
+      <symbol id="i-torch" viewBox="0 0 24 24"><path d="M9 2h6l1 5H8zM8 9h8l-1.5 4v8a1.5 1.5 0 0 1-1.5 1.5h-2A1.5 1.5 0 0 1 9.500 21v-8z" fill="currentColor"/></symbol>
+      <symbol id="i-chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    </defs>
+  </svg>
+
+  <div class="ticker" aria-hidden="true"><span>Lizard_Wizard // Creative Lab</span><span>K9-MK3 · est. 2026</span></div>
+  <header class="topbar">
+    <div class="brand"><span class="brand-mark"><img src="/assets/brand/k9-logo.svg" alt="Logo K9" width="64" height="64"></span><div><h1>K9<span>-MK3</span></h1><small>Painel de comando</small></div></div>
+    <span class="top-right">
+      <button type="button" class="stop-mini" id="stopBtn" aria-label="Parar movimento (tecla Espaço)" title="Parar (Espaço)">
+        <svg aria-hidden="true"><use href="#i-stop"/></svg><span>Parar</span>
+      </button>
+      <span class="chip device-chip" id="connPill" data-state="off" role="status" aria-live="polite">
+        <span class="dot" aria-hidden="true"></span><span id="connText">K9 OFF</span>
+      </span>
+      <span class="chip device-chip" id="camConnPill" data-state="off" role="status" aria-live="polite"><span class="dot" aria-hidden="true"></span><span id="camConnText">CAM OFF</span></span>
+      <label class="lang-pick"><span class="sr-only">Idioma</span><select id="langSelect" data-no-i18n aria-label="Idioma" title="Idioma"></select></label>
+      <button type="button" class="theme-toggle" id="themeBtn" aria-label="Alternar tema claro ou escuro" title="Tema claro / escuro" aria-pressed="false"><svg class="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a6.8 6.8 0 0 0 10.5 10.5Z"/></svg><svg class="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M18.7 5.3l-2.1 2.1M7.4 16.6l-2.1 2.1"/></svg></button>
+      <button type="button" class="settings-button" id="settingsBtn" aria-label="Configurações" title="Configurações" aria-haspopup="dialog"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.488.488 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg></button>
+    </span>
+  </header>
+  <p class="conn-help" id="connHelp" data-state="wait">Conectando…</p>
+
+  <nav class="experience-nav" aria-label="Modo do painel"><button type="button" class="btn" data-view="control" aria-pressed="true">Controle</button><button type="button" class="btn" data-view="personality" aria-pressed="false">Personalidade</button><button type="button" class="btn" id="gameFullscreen">Tela cheia</button></nav>
+  <main class="main">
+
+    <!-- CÂMERA + LANTERNA -->
+    <section class="panel a-cam" aria-label="Câmera e lanterna">
+      <div class="panel-head camera-heading"><h2 class="label"><span class="section-number">01</span>Visão de campo</h2><span class="meta">CÂMERA K9</span></div>
+      <div class="cam-frame" id="camFrame">
+        <img id="camStream" width="160" height="120" alt="Vídeo ao vivo da câmera do K9" decoding="async">
+        <div class="cam-hud" id="camHud" aria-label="Estado do robô">
+          <span class="hud-item" id="hudLink"><i class="hud-dot" id="hudDot"></i><span id="hudLinkTxt">HUB</span></span>
+          <span class="hud-item" id="hudPing" data-q="">— ms</span>
+          <span class="hud-item" id="hudRssi" data-q="">— dBm</span>
+          <span class="hud-drive" aria-hidden="true"><span class="hud-bar" title="Frente / ré"><b id="hudBarF"></b></span><span class="hud-bar" title="Girar"><b id="hudBarT"></b></span><em id="hudFT">F +0.00 T +0.00</em></span>
+        </div>
+        <div class="cam-overlay show" id="camOverlay" data-kind="wait" role="status" aria-live="polite">
+          <div class="msg"><strong id="ovTitle">Conectando…</strong><span id="ovSub">Aguarde um instante.</span></div>
+        </div>
+      </div>
+      <div class="cam-toolbar camera-tools" role="toolbar" aria-label="Lanterna e strobo">
+        <button type="button" class="cam-ic" id="flashBtn" aria-pressed="false" aria-keyshortcuts="F" aria-label="Lanterna" title="Lanterna"><svg aria-hidden="true" viewBox="0 0 24 24"><use href="#i-torch"/></svg></button>
+        <input type="range" class="cam-range" id="flashSlider" min="0" max="100" step="5" value="100" data-on="false" aria-label="Brilho da lanterna" title="Brilho da lanterna">
+        <button type="button" class="cam-ic cam-strobe" id="strobeBtn" aria-keyshortcuts="E" aria-pressed="false" aria-label="Strobo" title="Strobo"><svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor"><path d="M13.5 2 5 13.5h5.5L9.5 22 19 9.5h-5.8z"/></svg></button>
+        <input type="range" class="cam-range cam-strobe" id="strobeSlider" min="1" max="30" step="1" value="8" aria-label="Velocidade do strobo em hertz" title="Velocidade do strobo: 8 Hz">
+        <output class="sr-only" id="flashLabel" for="flashSlider" data-on="false">Desligada</output>
+        <output class="sr-only" id="strobeLabel" for="strobeSlider">8 Hz</output>
+      </div>
+      </div>
+      <div class="opt-bar" role="group" aria-label="Opções da imagem" hidden><!-- escondido: o firmware estável da câmera ainda não tem essas opções (veja docs) -->
+        <button type="button" class="qual-btn" id="optNight" aria-pressed="false">Modo noite</button>
+        <button type="button" class="qual-btn" id="optMirror" aria-pressed="false">Espelhar</button>
+        <button type="button" class="qual-btn" id="optFlip" aria-pressed="false">Inverter</button>
+        <label class="opt-bri">Brilho <input type="range" id="optBri" min="-2" max="2" step="1" value="0" aria-label="Brilho da imagem"></label>
+      </div>
+
+    </section>
+
+    <!-- ANDAR -->
+    <section class="panel a-drive" aria-labelledby="h-drive">
+      <div class="panel-head">
+        <h2 class="label" id="h-drive"><span class="section-number">02</span>Movimento</h2>
+        <span class="meta" id="inputSource">Pronto</span>
+      </div>
+      <div class="drive-row">
+        <div class="joy" id="joyZone" role="application" tabindex="0"
+             aria-label="Joystick de movimento. Também aceita as teclas W A S D e setas.">
+          <div class="joy-direction" id="joyGlow" aria-hidden="true"></div>
+          <div class="joy-stick" id="joyStick"></div>
+        </div>
+        <div class="dpad" id="dpadZone" role="group" aria-label="Direcional com setas" hidden>
+          <div></div>
+          <button type="button" class="btn" data-dir="1,0" aria-label="Para frente"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" d="M12 19V5M5 12l7-7 7 7"/></svg></button>
+          <div></div>
+          <button type="button" class="btn" data-dir="0,-1" aria-label="Girar para a esquerda"><svg viewBox="0 0 24 24" aria-hidden="true"><path transform="rotate(-90 12 12)" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" d="M12 19V5M5 12l7-7 7 7"/></svg></button>
+          <button type="button" class="btn mid" id="dpadStop" aria-label="Parar"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2"/></svg></button>
+          <button type="button" class="btn" data-dir="0,1" aria-label="Girar para a direita"><svg viewBox="0 0 24 24" aria-hidden="true"><path transform="rotate(90 12 12)" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" d="M12 19V5M5 12l7-7 7 7"/></svg></button>
+          <div></div>
+          <button type="button" class="btn" data-dir="-1,0" aria-label="Para trás"><svg viewBox="0 0 24 24" aria-hidden="true"><path transform="rotate(180 12 12)" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" d="M12 19V5M5 12l7-7 7 7"/></svg></button>
+          <div></div>
+        </div>
+        <button type="button" class="drive-mode" id="driveModeBtn" data-mode="joy" aria-label="Trocar para o direcional com setas" title="Trocar para setas">
+          <svg class="ic-pad" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M9 2h6v7h7v6h-7v7H9v-7H2V9h7z"/></svg>
+          <svg class="ic-joy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="2.6" fill="currentColor" stroke="none"/></svg>
+        </button>
+      </div>
+      <details class="drive-opts" id="driveOpts" open><summary>Velocidade</summary>
+      <label class="hint" for="driveSpeed">Velocidade · <output id="driveSpeedLabel">60%</output><span id="speedCold" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2v20M3.34 7l17.32 10M3.34 17 20.66 7M9 4l3 3 3-3M9 20l3-3 3 3M4 10l4-1-1-4M20 14l-4 1 1 4M4 14l4 1-1 4M20 10l-4-1 1-4"/></svg><span class="sr-only">Velocidade baixa</span></span></label>
+      <input id="driveSpeed" type="range" min="15" max="100" step="5" value="60" aria-label="Limite de velocidade" style="width:100%;min-height:44px">
+      </details>
+      <button type="button" class="gait-badge" id="gaitBadgeBtn" data-cmd="gait5" data-controls-v2 disabled title="Marcha principal (MK3 diagonal 1,25 Hz) — clique para voltar ao padrão"><span>Marcha</span><strong id="gaitBadge">MK3</strong></button>
+      <div class="gait-var-row" role="group" aria-label="Variações de marcha 1 a 10">
+        <button type="button" class="gait-var-btn" data-marcha-var="1" disabled title="1: Piso Firme (Padrão) — piso seco regular"><span class="gait-var-num">1</span><span class="gait-var-lbl">Firme</span></button>
+        <button type="button" class="gait-var-btn" data-marcha-var="2" disabled title="2: Carpete / Tapete — retorno veloz sem prender fios"><span class="gait-var-num">2</span><span class="gait-var-lbl">Tapete</span></button>
+        <button type="button" class="gait-var-btn" data-marcha-var="3" disabled title="3: Asfalto / Calçada — piso áspero com alta tração"><span class="gait-var-num">3</span><span class="gait-var-lbl">Asfalto</span></button>
+        <button type="button" class="gait-var-btn" data-marcha-var="4" disabled title="4: Piso Liso / Azulejo — passo curto sem deslizar"><span class="gait-var-num">4</span><span class="gait-var-lbl">Liso</span></button>
+        <button type="button" class="gait-var-btn" data-marcha-var="5" disabled title="5: Terra / Irregular — chassi alto e torque forte"><span class="gait-var-num">5</span><span class="gait-var-lbl">Terra</span></button>
+        <button type="button" class="gait-var-btn" data-marcha-var="6" disabled title="6: Simulada A — rápida, 1,56 Hz"><span class="gait-var-num">6</span><span class="gait-var-lbl">Sim A</span></button>
+        <button type="button" class="gait-var-btn" data-marcha-var="7" disabled title="7: Rastejo — três patas sempre apoiadas"><span class="gait-var-num">7</span><span class="gait-var-lbl">Rastejo</span></button>
+        <button type="button" class="gait-var-btn" data-marcha-var="8" disabled title="8: Simulada D — passo longo, 1,63 Hz"><span class="gait-var-num">8</span><span class="gait-var-lbl">Sim D</span></button>
+        <button type="button" class="gait-var-btn" data-marcha-var="9" disabled title="9: Simulada C — traseira adiantada"><span class="gait-var-num">9</span><span class="gait-var-lbl">Sim C</span></button>
+        <button type="button" class="gait-var-btn" data-marcha-var="10" disabled title="10: Simulada E — passo longo, 1,52 Hz"><span class="gait-var-num">10</span><span class="gait-var-lbl">Sim E</span></button>
+      </div>
+      <p class="hint gait-var-status" id="marchaVarStatus" role="status" aria-live="polite"></p>
+      <section class="robot-summary" aria-labelledby="robotSummaryTitle">
+        <h3 id="robotSummaryTitle">Seu robô</h3>
+        <dl>
+          <div><dt>Modelo</dt><dd>K9 · MK3</dd></div>
+          <div><dt>Firmware K9</dt><dd id="legsFirmware">Não informado</dd></div>
+          <div><dt>Firmware CAM</dt><dd id="camFirmware">Não informado</dd></div>
+          <div><dt>Conexão</dt><dd id="robotSummaryLink">Aguardando</dd></div>
+          <div><dt>Câmera</dt><dd id="robotSummaryCamera">Sem imagem</dd></div>
+          <div><dt>Tempo ligado</dt><dd id="robotSummaryUptime">—</dd></div>
+        </dl>
+      </section>
+    </section>
+
+    <!-- POSES -->
+    <section class="panel a-poses" aria-labelledby="h-poses">
+      <div class="panel-head"><h2 class="label" id="h-poses"><span class="section-number">03</span>Poses K9</h2><button type="button" class="btn voz-mini" id="vozBtn" title="Comandos de voz" aria-pressed="false"><svg class="rand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7"/></svg><span id="vozLabel">Voz</span></button></div>
+      <div class="activity-bar"><span id="activityLabel" role="status">Aguardando robô</span><button type="button" class="btn" id="activityStop">Interromper</button></div>
+      <div class="experience-tools"><button type="button" class="btn" id="idlePersonality" aria-pressed="false">Personalidade automática</button><button type="button" class="btn" id="sequenceOpen">Sequências</button></div>
+      <details class="favorites-box"><summary>Favoritos</summary><div id="favoriteButtons" class="favorites-grid"></div><button type="button" class="btn" id="favoritesEdit">Escolher favoritos</button></details>
+      <div class="sound-bar">
+        <input id="soundVolume" type="range" min="0" max="100" step="5" value="100" aria-label="Volume" disabled>
+        <button type="button" class="btn sound-mute" id="soundMute" aria-label="Mudo" title="Mudo" aria-pressed="false" disabled><svg id="soundMuteIcon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4z"/><path id="soundWaves" d="M15 8a6 6 0 0 1 0 8m3-11a10 10 0 0 1 0 14"/><path id="soundSlash" d="m3 3 18 18" style="display:none"/></svg></button>
+      </div>
+      <div class="pose-tabs" role="tablist" aria-label="Tipo de ação">
+        <button type="button" class="pose-tab" role="tab" id="tabPoses" aria-selected="true" aria-controls="gridPoses" data-grid="gridPoses">Poses</button>
+        <button type="button" class="pose-tab" role="tab" id="tabAcoes" aria-selected="false" aria-controls="gridAcoes" data-grid="gridAcoes" tabindex="-1">Ações</button>
+        <button type="button" class="pose-tab" role="tab" id="tabAnim" aria-selected="false" aria-controls="gridAnim" data-grid="gridAnim" tabindex="-1">Animações</button>
+        <button type="button" class="pose-tab" role="tab" id="tabSons" aria-selected="false" aria-controls="gridSons" data-grid="gridSons" tabindex="-1">Sons</button>
+        <button type="button" class="pose-tab" role="tab" id="tabEmocoes" aria-selected="false" aria-controls="gridEmocoes" data-grid="gridEmocoes" tabindex="-1">Emoções</button>
+      </div>
+      <div class="poses" id="gridPoses" role="tabpanel" aria-labelledby="tabPoses">
+        <button type="button" class="btn btn-pose" data-cmd="stand" data-label="Padrão"><img class="pose-icon" src="/assets/poses/stand.svg" alt="" draggable="false"><span>Padrão</span></button>
+        <button type="button" class="btn btn-pose" aria-keyshortcuts="C" data-cmd="sit" data-label="Sentar"><img class="pose-icon" src="/assets/poses/sit.svg" alt="" draggable="false"><span>Sentar</span></button>
+        <button type="button" class="btn btn-pose" data-cmd="lie" data-label="Deitar"><img class="pose-icon" src="/assets/poses/lie.svg" alt="" draggable="false"><span>Deitar</span></button>
+      </div>
+      <div class="poses" id="gridAcoes" role="tabpanel" aria-labelledby="tabAcoes" hidden>
+        <button type="button" class="btn btn-pose" data-cmd="wave" data-label="Pata direita"><img class="pose-icon" src="/assets/poses/wave.svg" alt="" draggable="false"><span>Pata direita</span></button>
+        <button type="button" class="btn btn-pose" data-cmd="waveleft" data-controls-v2 disabled data-label="Pata esquerda"><img class="pose-icon" style="transform:scaleX(-1)" src="/assets/poses/wave.svg" alt="" draggable="false"><span>Pata esquerda</span></button>
+        <button type="button" class="btn btn-pose" data-cmd="wag" data-label="Abanar o rabo"><img class="pose-icon" src="/assets/poses/wag.svg" alt="" draggable="false"><span>Abanar o rabo</span></button>
+        <button type="button" class="btn btn-pose" data-cmd="dig" data-label="Cavar"><img class="pose-icon" src="/assets/poses/dig.svg" alt="" draggable="false"><span>Cavar</span></button>
+        <div class="npc-wrap">
+          <button type="button" class="btn btn-pose npc-btn" id="npcBtn" aria-pressed="false"><svg class="npc-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><ellipse cx="6.5" cy="10" rx="2" ry="2.7"/><ellipse cx="10.5" cy="6.2" rx="2" ry="2.7"/><ellipse cx="15" cy="6.2" rx="2" ry="2.7"/><ellipse cx="18.6" cy="10" rx="2" ry="2.7"/><path d="M12.8 11.2c-2.9 0-6 3.2-6 6 0 1.8 1.4 2.8 3.2 2.8 1 0 1.8-.3 2.8-.3s1.8.3 2.8.3c1.8 0 3.2-1 3.2-2.8 0-2.8-3.1-6-6-6z"/></svg><span id="npcLabel">NPC</span></button>
+          <button type="button" class="npc-gear" id="npcCfgBtn" aria-label="Configurar o modo NPC" title="Configurar o NPC" aria-haspopup="dialog"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.488.488 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg></button>
+          </div>
+      </div>
+      <div class="poses" id="gridAnim" role="tabpanel" aria-labelledby="tabAnim" hidden>
+        <button type="button" class="btn btn-pose" data-cmd="wake" data-label="Acordar"><span aria-hidden="true">☀</span><span>Acordar</span></button>
+        <button type="button" class="btn btn-pose" data-cmd="sleep" data-label="Dormir"><span aria-hidden="true">☾</span><span>Dormir</span></button>
+        <button type="button" class="btn btn-pose" data-cmd="dance" data-label="Dançar"><img class="pose-icon" src="/assets/poses/dance.svg" alt="" draggable="false"><span>Dançar</span></button>
+        <button type="button" class="btn btn-pose" data-cmd="stretch" data-label="Alongar"><img class="pose-icon" src="/assets/poses/stretch.svg" alt="" draggable="false"><span>Alongar</span></button>
+        <button type="button" class="btn btn-pose" data-cmd="scratch" data-label="Coçar a barriga"><img class="pose-icon" src="/assets/poses/scratch.svg" alt="" draggable="false"><span>Coçar</span></button>
+      </div>
+      <div class="poses" id="gridEmocoes" role="tabpanel" aria-labelledby="tabEmocoes" hidden>
+        <button type="button" class="btn btn-pose" data-cmd="emotion_shy" data-label="Vergonha"><span>Vergonha</span></button>
+        <button type="button" class="btn btn-pose" data-cmd="emotion_celebrate" data-label="Comemorar"><span>Comemorar</span></button>
+        <button type="button" class="btn btn-pose" data-cmd="emotion_greet" data-label="Cumprimentar"><span>Cumprimentar</span></button>
+        <button type="button" class="btn btn-pose" data-cmd="emotion_glitch" data-label="Robô com defeito"><span>Robô com defeito</span></button>
+        <button type="button" class="btn btn-pose" data-cmd="emotion_happy" data-label="Feliz"><span>Feliz</span></button>
+        <button type="button" class="btn btn-pose" data-cmd="emotion_sad" data-label="Triste"><span>Triste</span></button>
+        <button type="button" class="btn btn-pose" data-cmd="emotion_confused" data-label="Confuso"><span>Confuso</span></button>
+        <button type="button" class="btn btn-pose" data-cmd="emotion_angry" data-label="Bravo"><span>Bravo</span></button>
+        <button type="button" class="btn btn-pose" data-cmd="emotion_curious" data-label="Curioso"><span>Curioso</span></button>
+        <button type="button" class="btn btn-pose" data-cmd="emotion_laugh" data-label="Risada"><span>Risada</span></button>
+      </div>
+      <div class="poses" id="gridSons" role="tabpanel" aria-labelledby="tabSons" hidden>
+        <button type="button" class="btn btn-pose" aria-keyshortcuts="1" data-cmd="sound_wake" data-label="Despertar"><span aria-hidden="true">✦</span><span>Despertar</span></button>
+        <button type="button" class="btn btn-pose" aria-keyshortcuts="2" data-cmd="sound_spell" data-label="Feitiço"><span aria-hidden="true">✧</span><span>Feitiço</span></button>
+        <button type="button" class="btn btn-pose" aria-keyshortcuts="3" data-cmd="sound_sad" data-label="Tristinho"><span aria-hidden="true">◎</span><span>Tristinho</span></button>
+        <button type="button" class="btn btn-pose" aria-keyshortcuts="4" data-cmd="sound_laugh" data-label="Risada digital"><span aria-hidden="true">♫</span><span>Risada digital</span></button>
+        <button type="button" class="btn btn-pose" aria-keyshortcuts="5" data-cmd="sound_crazy" data-label="Confuso"><span aria-hidden="true">⚡</span><span>Confuso</span></button>
+        <button type="button" class="btn btn-pose" aria-keyshortcuts="6" data-cmd="sound_beep" data-label="Bipe"><span aria-hidden="true">♪</span><span>Bipe</span></button>
+        <button type="button" class="btn btn-pose" aria-keyshortcuts="7" data-cmd="sound_hello" data-label="Olá"><span aria-hidden="true">♫</span><span>Olá</span></button>
+        <button type="button" class="btn btn-pose" aria-keyshortcuts="8" data-cmd="sound_alert" data-label="Alerta"><span aria-hidden="true">♬</span><span>Alerta</span></button>
+        <button type="button" class="btn btn-pose" aria-keyshortcuts="9" data-cmd="sound_robot" data-label="Robô"><span aria-hidden="true">♩</span><span>Robô</span></button>
+        <button type="button" class="btn btn-pose" data-cmd="sound_whistle" data-label="Assobio"><span aria-hidden="true">♪</span><span>Assobio</span></button>
+        <button type="button" class="btn btn-pose" aria-pressed="false" data-cmd="sound_pulse" data-label="Pulso"><span aria-hidden="true">♫</span><span>Pulso</span></button>
+        <button type="button" class="btn btn-pose" aria-pressed="false" data-cmd="sound_march" data-label="Marcha Lunar"><span aria-hidden="true">♫</span><span>Marcha Lunar</span></button>
+        <button type="button" class="btn btn-pose" aria-pressed="false" data-cmd="sound_arcade" data-label="Arcade"><span aria-hidden="true">♫</span><span>Arcade</span></button>
+        <button type="button" class="btn btn-pose" aria-pressed="false" data-cmd="sound_cosmos" data-label="Cosmos"><span aria-hidden="true">♫</span><span>Cosmos</span></button>
+        <button type="button" class="btn btn-pose" aria-pressed="false" aria-keyshortcuts="0" data-cmd="sound_alarm" data-label="ALARME"><span aria-hidden="true">⚠</span><span>ALARME</span></button>
+        <button type="button" class="btn btn-pose" data-cmd="sound_stop" data-label="Parar som"><span aria-hidden="true">■</span><span>Parar som</span></button>
+      </div>
+      <p class="pose-note" id="npcStatus" role="status" hidden></p>
+      <p class="pose-note" id="vozStatus" role="status" hidden></p>
+    </section>
+
+    <!-- AVANÇADO: tudo o resto, recolhido -->
+    <section class="panel a-adv">
+      <details class="adv" id="advDetails">
+        <summary><span>Configurações<small>Conexão, ajuste das patas, registro do robô</small></span><svg class="chev" aria-hidden="true"><use href="#i-chev"/></svg></summary>
+        <div class="adv-body">
+          <details class="adv-sec adv-wide">
+            <summary>Teste manual dos servos</summary>
+            <p>Um segundo por clique; depois volta ao centro.</p>
+            <div class="keyboard-bindings"><span>Dianteira esquerda</span><button type="button" class="btn" data-cmd="jog0less" data-label="Dianteira esquerda">−5°</button><button type="button" class="btn" data-cmd="jog0plus" data-label="Dianteira esquerda">+5°</button></div>
+            <div class="keyboard-bindings"><span>Dianteira direita</span><button type="button" class="btn" data-cmd="jog1less" data-label="Dianteira direita">−5°</button><button type="button" class="btn" data-cmd="jog1plus" data-label="Dianteira direita">+5°</button></div>
+            <div class="keyboard-bindings"><span>Traseira esquerda</span><button type="button" class="btn" data-cmd="jog2less" data-label="Traseira esquerda">−5°</button><button type="button" class="btn" data-cmd="jog2plus" data-label="Traseira esquerda">+5°</button></div>
+            <div class="keyboard-bindings"><span>Traseira direita</span><button type="button" class="btn" data-cmd="jog3less" data-label="Traseira direita">−5°</button><button type="button" class="btn" data-cmd="jog3plus" data-label="Traseira direita">+5°</button></div>
+            <button type="button" class="btn" data-cmd="cal" data-label="Centralizar">Centralizar</button>
+          </details>
+
+          <details class="adv-sec adv-wide keyboard-menu">
+            <summary>Controles</summary>
+            <dl class="keyboard-bindings">
+              <div><dt>Despertar</dt><dd><kbd>1</kbd></dd></div>
+              <div><dt>Feitiço</dt><dd><kbd>2</kbd></dd></div>
+              <div><dt>Tristinho</dt><dd><kbd>3</kbd></dd></div>
+              <div><dt>Risada digital</dt><dd><kbd>4</kbd></dd></div>
+              <div><dt>Confuso</dt><dd><kbd>5</kbd></dd></div>
+              <div><dt>Bipe</dt><dd><kbd>6</kbd></dd></div>
+              <div><dt>Olá</dt><dd><kbd>7</kbd></dd></div>
+              <div><dt>Alerta</dt><dd><kbd>8</kbd></dd></div>
+              <div><dt>Robô</dt><dd><kbd>9</kbd></dd></div>
+              <div><dt>ALARME</dt><dd><kbd>0</kbd></dd></div>
+              <div><dt>Sentar</dt><dd><kbd>C</kbd></dd></div>
+              <div><dt>Strobo</dt><dd><kbd>E</kbd></dd></div>
+              <div><dt>Lanterna</dt><dd><kbd>F</kbd></dd></div>
+              <div><dt>Para frente</dt><dd><kbd>W / ↑</kbd></dd></div>
+              <div><dt>Para trás</dt><dd><kbd>S / ↓</kbd></dd></div>
+              <div><dt>Girar para a esquerda</dt><dd><kbd>A / ←</kbd></dd></div>
+              <div><dt>Girar para a direita</dt><dd><kbd>D / →</kbd></dd></div>
+              <div><dt>Parar</dt><dd><kbd>␣</kbd></dd></div>
+            </dl>
+          </details>
+
+          <div class="adv-sec adv-wide">
+      <div class="gait-picker" role="group" aria-label="Jeito de andar">
+        <span class="label">Marcha</span>
+        <div class="gait-options">
+          <button type="button" class="qual-btn gait-mk3 gait-main" data-cmd="gait5" data-controls-v2 disabled data-label="Marcha MK3 diagonal" aria-pressed="false">MK3 · diagonal <small>1,25 Hz · marcha principal</small></button>
+        </div>
+        <div class="gait-var-row" role="group" aria-label="Variações de marcha 1 a 10">
+          <button type="button" class="gait-var-btn" data-marcha-var="1" disabled title="1: Piso Firme (Padrão) — piso seco regular"><span class="gait-var-num">1</span><span class="gait-var-lbl">Firme</span></button>
+          <button type="button" class="gait-var-btn" data-marcha-var="2" disabled title="2: Carpete / Tapete — retorno veloz sem prender fios"><span class="gait-var-num">2</span><span class="gait-var-lbl">Tapete</span></button>
+          <button type="button" class="gait-var-btn" data-marcha-var="3" disabled title="3: Asfalto / Calçada — piso áspero com alta tração"><span class="gait-var-num">3</span><span class="gait-var-lbl">Asfalto</span></button>
+          <button type="button" class="gait-var-btn" data-marcha-var="4" disabled title="4: Piso Liso / Azulejo — passo curto sem deslizar"><span class="gait-var-num">4</span><span class="gait-var-lbl">Liso</span></button>
+          <button type="button" class="gait-var-btn" data-marcha-var="5" disabled title="5: Terra / Irregular — chassi alto e torque forte"><span class="gait-var-num">5</span><span class="gait-var-lbl">Terra</span></button>
+          <button type="button" class="gait-var-btn" data-marcha-var="6" disabled title="6: Simulada A — rápida, 1,56 Hz"><span class="gait-var-num">6</span><span class="gait-var-lbl">Sim A</span></button>
+          <button type="button" class="gait-var-btn" data-marcha-var="7" disabled title="7: Rastejo — três patas sempre apoiadas"><span class="gait-var-num">7</span><span class="gait-var-lbl">Rastejo</span></button>
+          <button type="button" class="gait-var-btn" data-marcha-var="8" disabled title="8: Simulada D — passo longo, 1,63 Hz"><span class="gait-var-num">8</span><span class="gait-var-lbl">Sim D</span></button>
+          <button type="button" class="gait-var-btn" data-marcha-var="9" disabled title="9: Simulada C — traseira adiantada"><span class="gait-var-num">9</span><span class="gait-var-lbl">Sim C</span></button>
+          <button type="button" class="gait-var-btn" data-marcha-var="10" disabled title="10: Simulada E — passo longo, 1,52 Hz"><span class="gait-var-num">10</span><span class="gait-var-lbl">Sim E</span></button>
+        </div>
+        <p class="hint" id="gaitHint"></p>
+        <details class="gait-more" id="gaitMore"><summary><span>Outras marchas e testes</span><em id="gaitMoreState"></em></summary>
+          <div class="gait-options">
+            <button type="button" class="qual-btn" data-cmd="gait1" data-controls-v2 disabled data-label="Marcha padrão" aria-pressed="false">Padrão · 53°</button>
+            <button type="button" class="qual-btn" data-cmd="gait2" data-controls-v2 disabled data-label="Passo 59°" aria-pressed="false">Passo 59°</button>
+            <button type="button" class="qual-btn" data-cmd="gait3" data-controls-v2 disabled data-label="Passo 65°" aria-pressed="false">Passo 65°</button>
+            <button type="button" class="qual-btn" data-cmd="gait4" data-controls-v2 disabled data-label="Passo 47°" aria-pressed="false">Passo 47°</button>
+            <button type="button" class="qual-btn gait-mk3" data-cmd="gait6" data-controls-v2 disabled data-label="Marcha MK3 lado" aria-pressed="false">MK3 · lado <small>1,5 Hz · anda p/ frente</small></button>
+          </div>
+          <div class="gait-picker" role="group" aria-label="Testes de marcha">
+            <span class="label">Testes de marcha</span>
+            <div class="gait-options">
+              <button type="button" class="qual-btn" data-gait-test="I" disabled aria-pressed="false"> I · Postura 0° </button>
+              <button type="button" class="qual-btn" data-gait-test="J" disabled aria-pressed="false"> J · Postura -10° </button>
+              <button type="button" class="qual-btn" data-gait-test="K" disabled aria-pressed="false"> K · Impulso 0,60 </button>
+              <button type="button" class="qual-btn" data-gait-test="L" disabled aria-pressed="false"> L · Impulso 0,72 </button>
+            </div>
+            <p class="hint" id="gaitTestStatus" role="status" aria-live="polite">Aguardando conexão com as pernas.</p>
+          </div>
+        </details>
+      </div>
+          </div>
+
+          <div class="adv-sec" aria-labelledby="h-conn">
+            <h3 class="label" id="h-conn">Conexão</h3>
+            <div class="stats">
+              <div class="stat">Endereço (IP)<b id="ipPill">-</b></div>
+              <div class="stat">Wi-Fi<b id="ssidVal">-</b></div>
+              <div class="stat" id="pingPill" data-q="">Resposta<b id="pingVal">-</b></div>
+              <div class="stat" id="rssiPill" data-q="">Sinal<b><span class="bars" id="rssiBars" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span id="rssiVal">-</span></b></div>
+              <div class="stat" id="upPill">Ligado há<b id="upVal">-</b></div>
+              <div class="stat">Marcha<b id="gaitLabel">-</b></div>
+              <div class="stat" style="grid-column:1/-1">Comando de andar<b id="hudDrive">F +0.00 | T +0.00</b></div>
+            </div>
+            <form class="ip-form" id="ipForm" novalidate>
+              <label for="manualIpInput">Endereço (IP) do robô. É achado sozinho; digite só se precisar forçar.</label>
+              <input type="text" id="manualIpInput" inputmode="decimal" autocomplete="off" autocapitalize="off" spellcheck="false"
+                     placeholder="192.168.0.x" aria-describedby="ipErr">
+              <button type="submit" class="btn" id="ipBtn">Conectar</button>
+              <p class="ip-err" id="ipErr" role="alert"></p>
+            </form>
+          </div>
+
+          <div class="adv-sec adv-wide" aria-labelledby="h-wifi">
+            <h3 class="label" id="h-wifi">Rede Wi-Fi das placas</h3>
+            <p class="note">Troca a rede em que o robô entra. A placa reinicia e some por alguns segundos. Se a rede ou a senha estiverem erradas, ela abre o ponto de acesso de emergência “Minirobo-K9”. A senha não fica guardada no painel.</p>
+            <form class="wifi-form" id="wifiForm" autocomplete="off" novalidate>
+              <label class="hint" for="wifiAlvo">Placa
+                <select id="wifiAlvo" style="display:block;width:100%;min-height:44px"><option value="legs">Pernas</option><option value="cam">Câmera</option></select></label>
+              <label class="hint" for="wifiSsid">Nome da rede (SSID)
+                <input id="wifiSsid" type="text" maxlength="32" autocomplete="off" autocapitalize="off" spellcheck="false" style="display:block;width:100%;min-height:44px" aria-describedby="wifiMsg"></label>
+              <label class="hint" for="wifiPass">Senha (vazio = rede aberta)
+                <input id="wifiPass" type="password" maxlength="63" autocomplete="new-password" autocapitalize="off" spellcheck="false" style="display:block;width:100%;min-height:44px"></label>
+              <label class="rand-check"><input type="checkbox" id="wifiMostrar"><span>Mostrar a senha</span></label>
+              <button type="submit" class="btn btn-warn" id="wifiBtn">Trocar rede</button>
+              <p class="hint" id="wifiMsg" role="status" aria-live="polite"></p>
+            </form>
+          </div>
+
+          <div class="adv-sec" aria-labelledby="h-legs">
+            <h3 class="label" id="h-legs">Posição das patas <span class="mono" id="legsMeta" style="letter-spacing:0;text-transform:none;font-weight:400">· aguardando</span></h3>
+            <div class="legs" id="legs"></div>
+          </div>
+
+          <div class="adv-sec adv-wide"><h3 class="label">Ajustar marcha</h3>
+            <p class="note">Ajustes do criador. Aplicar interrompe o comando de andar. Valem até trocar de marcha ou reiniciar. O padrão restaura os valores originais.</p>
+            <p class="hint" id="gaitCurrent">Aguardando parâmetros da placa.</p>
+            <form id="gaitForm"><div class="gait-options"><label class="hint">Frequência (Hz)<input id="gaitParam0" type="number" required min="0.2" max="3" step="0.01" value="1.6" style="display:block;width:100%;min-height:44px"></label><label class="hint">Amplitude (°)<input id="gaitParam1" type="number" required min="5" max="65" step="1" value="53" style="display:block;width:100%;min-height:44px"></label><label class="hint">Tempo de apoio<input id="gaitParam2" type="number" required min="0.1" max="0.9" step="0.01" value="0.66" style="display:block;width:100%;min-height:44px"></label><label class="hint">Inclinação (°)<input id="gaitParam3" type="number" required min="-20" max="20" step="1" value="-6" style="display:block;width:100%;min-height:44px"></label><label class="hint">Proporção frente/trás<input id="gaitParam4" type="number" required min="0.6" max="1.4" step="0.01" value="1" style="display:block;width:100%;min-height:44px"></label></div><p class="hint">O retorno do servo deve ficar até 503°/s. Combinações acima desse valor são recusadas, incluindo a proporção entre as patas.</p>
+            <div class="row2"><button type="button" class="btn" id="gaitRead">Carregar valores atuais</button><button type="submit" class="btn" data-controls-v2 disabled>Aplicar ajuste</button></div>
+            <p class="hint" id="gaitResult" role="status"></p></form>
+            <details class="sub"><summary>Teste de apoio e documentação</summary><p class="note">Para o teste de apoio diagonal, selecione 15% de velocidade e conduza manualmente. Observe se as duas diagonais sustentam o corpo alternadamente. Corrija o trim das patas sem apoio. O teste só começa quando você usa os controles.</p><p><a href="https://www.minirobo.io/projects/k9v2-1" target="_blank" rel="noopener">Documentação do K9V2.1</a> · <a href="https://www.minirobo.io/episodes/k9v2-1" target="_blank" rel="noopener">Episódio do criador</a></p></details>
+          </div>
+          <div class="adv-sec adv-wide" aria-labelledby="h-trim">
+            <h3 class="label" id="h-trim">Ajuste das patas</h3>
+            <p class="note">Corrige patas que ficam tortas. Cada toque move 1,5° e fica salvo no robô. "Testar" mexe só naquela pata.</p>
+            <div id="trimRows" style="display:grid;gap:8px"></div>
+            <button type="button" class="btn btn-warn" id="calBtn" aria-controls="calConfirm" aria-expanded="false">Alinhar todas as patas em 90°</button>
+            <div class="confirm" id="calConfirm" role="group" aria-labelledby="calConfirmMsg" hidden>
+              <p id="calConfirmMsg"><strong>Confirmar?</strong> Todas as patas vão para 90° agora. Deixe o robô suspenso ou deitado.</p>
+              <div class="row2">
+                <button type="button" class="btn" id="calNo">Cancelar</button>
+                <button type="button" class="btn btn-danger" id="calYes">Alinhar 90°</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="adv-sec adv-wide">
+            <details class="sub" id="logDetails">
+              <summary>Registro do robô</summary>
+              <div class="adv-sec">
+                <p class="note">Fica guardado no robô, mesmo se ele reiniciar, e inclui o motivo da queda. Só é baixado quando você pedir.</p>
+                <div class="row">
+                  <button type="button" class="btn" id="logLoad">Ver recentes</button>
+                  <a class="btn" id="logFull" href="/api/log?full=1" download="k9-log.txt">Baixar tudo</a>
+                  <button type="button" class="btn btn-danger" id="logClear">Apagar</button>
+                </div>
+                <p class="note" id="logInfo" aria-live="polite"></p>
+                <pre class="log-view" id="logView"></pre>
+              </div>
+            </details>
+          </div>
+
+        </div>
+      </details>
+    </section>
+  </main>
+
+  <dialog id="settingsDialog" aria-labelledby="settingsTitle"><div class="settings-heading"><h2 id="settingsTitle">Configurações</h2><button type="button" id="settingsClose" class="settings-button" aria-label="Fechar configurações">×</button></div><div id="settingsContent"></div></dialog>
+  <div class="toasts" id="toasts" aria-live="polite" aria-atomic="false" role="log"></div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    'use strict';
+    const DRIVE_HZ_MS = 50;      // 20 Hz enquanto alguma fonte está ativa
+    const IPV4_RE = /^(\d{1,3}\.){3}\d{1,3}$/;
+    const STREAM_RETRY_MS = 3000;
+    const CAL_CONFIRM_MS = 10000;
+    const TOAST_MS = 3600;
+    const TRIM_STEP_US = 15;
+    const LEGS = [
+      { code: 'FL', name: 'Diant. esq.', pin: 'IO14' },
+      { code: 'FR', name: 'Diant. dir.', pin: 'IO15' },
+      { code: 'RL', name: 'Tras. esq.', pin: 'IO13' },
+      { code: 'RR', name: 'Tras. dir.', pin: 'IO2' }
+    ];
+    const $ = (id) => document.getElementById(id);
+
+    const K9Hub = {
+      socket: null,
+      robotIp: null,
+      camIp: null,          // a câmera/lanterna fica numa placa separada
+      fwd: 0,
+      turn: 0,
+      driveInterval: null,
+      // um vetor [fwd, turn] por fonte: soltar uma fonte não zera as outras
+      sources: { joy: [0, 0], dpad: [0, 0], keys: [0, 0], pad: [0, 0] },
+      keys: {},
+      flashLevel: 0,
+      flashSending: null,
+      pendingFlash: 0,
+      strobeHz: 0,
+      speedLimit: .6,
+      link: { hub: false, robot: false, everHub: false, video: false, videoErr: false },
+      retryTimer: null,
+      streamFailures: 0,
+      srFailures: 0,
+      pageSuspended: false,
+      calTimer: null,
+      lastToast: { msg: '', t: 0 },
+
+      init() {
+        const token = new URLSearchParams(location.search).get('token') || '';
+        this.socket = io({ auth: { token } });
+        this.buildLegs();
+        this.buildTrimRows();
+        this.bindSocketEvents();
+        if (window.K9SoundControls) window.K9SoundControls(this);
+        this.bindUi();
+        this.initJoystick();
+        this.initDpad();
+        this.initDriveMode();
+        this.initKeyboard();
+        this.initGamepadLoop();
+        this.initSafety();
+        this.renderFlash(0);
+        this.renderStrobe(0);
+        this.renderLink();
+      },
+
+      // ---- construção de partes estáticas -------------------------------------
+      buildLegs() {
+        $('legs').innerHTML = '<div class="legs-front" aria-hidden="true">▲ frente</div>' + LEGS.map((l, i) => `
+          <div class="leg" id="leg${i}">
+            <svg viewBox="0 0 76 50" aria-hidden="true">
+              <path class="arc" d="M 6 44 A 32 32 0 0 1 70 44"/>
+              <line class="neutral" x1="38" y1="8" x2="38" y2="16"/>
+              <line class="needle" id="needle${i}" x1="38" y1="44" x2="38" y2="14"/>
+              <circle class="hub" cx="38" cy="44" r="4"/>
+            </svg>
+            <div class="leg-info">
+              <div class="leg-head">
+                <div class="leg-name">${l.code}<small>${l.name}</small></div>
+                <div class="leg-deg mono" id="legDeg${i}">--°</div>
+              </div>
+              <div class="leg-us mono"><b id="legTrim${i}">-</b> ajuste<br><b id="legUs${i}">-</b> pulso</div>
+            </div>
+          </div>`).join('');
+      },
+
+      buildTrimRows() {
+        $('trimRows').innerHTML = LEGS.map((l, i) => `
+          <div class="trim-row">
+            <div class="who">${l.code}<small><span>${l.name}</span> · ${l.pin}</small></div>
+            <span class="us mono" id="trim${i}">1500 µs</span>
+            <span class="trim-btns">
+              <button type="button" class="btn btn-sm" data-trim="${i},${-TRIM_STEP_US}" aria-label="${l.code}: reduzir 1,5 graus">−1,5°</button>
+              <button type="button" class="btn btn-sm" data-trim="${i},${TRIM_STEP_US}" aria-label="${l.code}: aumentar 1,5 graus">+1,5°</button>
+              <button type="button" class="btn btn-sm" data-cmd="test${i}" data-label="Testar ${l.code}">Testar</button>
+            </span>
+          </div>`).join('');
+      },
+
+      // ---- UI genérica -----------------------------------------------------------
+      bindUi() {
+        $('driveSpeed').addEventListener('input', () => {
+          this.clearSources(); this.speedLimit = Number($('driveSpeed').value) / 100;
+          const danger = Number($('driveSpeed').value) > 80;
+          const cold = Number($('driveSpeed').value) <= 20;
+          $('speedCold').hidden = !cold;
+          $('driveSpeedLabel').dataset.cold = String(cold);
+          $('driveSpeedLabel').textContent = $('driveSpeed').value + '%' + (danger ? ' · Atenção' : '');
+          $('driveSpeedLabel').dataset.danger = String(danger);
+          $('driveSpeed').setAttribute('aria-valuetext', $('driveSpeedLabel').textContent + (cold ? ' · Velocidade baixa' : ''));
+        });
+        $('gaitForm').addEventListener('submit', e => { e.preventDefault(); this.applyGaitParams(); });
+        $('gaitRead').addEventListener('click', () => {
+          if (this.gaitParams) this.gaitParams.forEach((v,i) => { $('gaitParam' + i).value = v; });
+        });
+        document.addEventListener('click', (e) => {
+          const cmdBtn = e.target.closest('[data-cmd]');
+          if (cmdBtn) { this.sendCmd(cmdBtn.dataset.cmd, cmdBtn.dataset.label); return; }
+          const trimBtn = e.target.closest('[data-trim]');
+          if (trimBtn) {
+            const [leg, delta] = trimBtn.dataset.trim.split(',').map(Number);
+            this.nudgeTrim(leg, delta);
+          }
+        });
+
+        if ($('flashBtn')) $('flashBtn').addEventListener('click', () => this.toggleFlash());
+        const fSlider = $('flashSlider');
+        if (fSlider) fSlider.addEventListener('input', () => this.setFlash(fSlider.value));
+
+        const sSlider = $('strobeSlider');
+        if (sSlider) {
+          sSlider.addEventListener('input', () => {
+            if ($('strobeLabel')) $('strobeLabel').textContent = sSlider.value + ' Hz';
+            sSlider.title = 'Velocidade do strobo: ' + sSlider.value + ' Hz';
+            if (this.strobeHz > 0) this.setStrobe(sSlider.value);
+          });
+        }
+        const sBtn = $('strobeBtn');
+        if (sBtn) sBtn.addEventListener('click', () => this.setStrobe(this.strobeHz > 0 ? 0 : (sSlider ? sSlider.value : 8)));
+
+        const tog = (id, key) => $(id).addEventListener('click', () => {
+          const on = $(id).getAttribute('aria-pressed') !== 'true';
+          $(id).setAttribute('aria-pressed', String(on));
+          this.setOpt(key, on ? 1 : 0);
+        });
+        tog('optMirror', 2); tog('optFlip', 3); tog('optNight', 4);
+        $('optBri').addEventListener('change', () => this.setOpt(1, Number($('optBri').value)));
+        // calibração: passo de confirmação antes de 'cal'
+        $('calBtn').addEventListener('click', () => this.openCalConfirm());
+        $('calNo').addEventListener('click', () => this.closeCalConfirm(true));
+        $('calYes').addEventListener('click', () => {
+          this.closeCalConfirm(true);
+          this.sendCmd('cal', 'Alinhar 90°');
+        });
+        $('advDetails').addEventListener('toggle', () => { if (!$('advDetails').open) this.closeCalConfirm(false); });
+        $('calConfirm').addEventListener('keydown', (e) => { if (e.key === 'Escape') this.closeCalConfirm(true); });
+
+        $('ipForm').addEventListener('submit', (e) => { e.preventDefault(); this.setManualIp(); });
+        $('manualIpInput').addEventListener('input', () => this.setIpError(''));
+      },
+
+      openCalConfirm() {
+        $('calConfirm').hidden = false;
+        $('calBtn').setAttribute('aria-expanded', 'true');
+        $('calNo').focus();
+        clearTimeout(this.calTimer);
+        this.calTimer = setTimeout(() => this.closeCalConfirm(false), CAL_CONFIRM_MS);
+      },
+
+      closeCalConfirm(restoreFocus) {
+        clearTimeout(this.calTimer);
+        $('calConfirm').hidden = true;
+        $('calBtn').setAttribute('aria-expanded', 'false');
+        if (restoreFocus) $('calBtn').focus();
+      },
+
+      toast(msg, kind = 'info') {
+        const now = Date.now();
+        if (msg === this.lastToast.msg && now - this.lastToast.t < 1500) return;   // anti-spam
+        this.lastToast = { msg, t: now };
+        const host = $('toasts');
+        const el = document.createElement('div');
+        el.className = 'toast';
+        el.dataset.kind = kind;
+        if (kind === 'error') el.setAttribute('role', 'alert');
+        el.textContent = msg;
+        host.appendChild(el);
+        while (host.children.length > 3) host.firstElementChild.remove();
+        setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 220); }, TOAST_MS);
+      },
+
+      // ---- socket ------------------------------------------------------------------
+      bindSocketEvents() {
+        const s = this.socket;
+        s.on('connect', () => {
+          this.link.hub = true; this.link.everHub = true;
+          if (this.camIp) this.setStream(this.camIp, true);
+          this.renderLink();
+        });
+        s.on('disconnect', () => {
+          this.clearSources();
+          this.link.hub = false; this.link.robot = false;
+          this.renderLink();
+          this.toast('Hub desconectado. Comandos suspensos até reconectar.', 'error');
+        });
+        s.on('connect_error', (err) => {
+          this.link.hub = false;
+          this.renderLink();
+          const m = err && err.message ? String(err.message) : '';
+          if (/auth|token|unauthor/i.test(m)) this.toast('Token recusado pelo hub. Verifique ?token= na URL.', 'error');
+        });
+        s.on('k9:ack', (a) => {
+          const reply = a && typeof a.reply === 'string' ? a.reply.trim() : '';
+          if (!reply) return;
+          const bad = /^(err|erro|fail|falh|busy|invalid|inv[aá]lid|nok|unknown)/i.test(reply);
+          this.toast('Robô: ' + reply, bad ? 'error' : 'ok');
+        });
+        s.on('k9:status', (st) => {
+          if (st && st.online === false) { this.link.robot = false; this.renderLink(); }
+        });
+        s.on('k9:telemetry', (data) => this.onTelemetry(data || {}));
+      },
+
+      onTelemetry(data) {
+        this.link.hub = true;
+        this.link.robot = !!data.online;
+        $('legsFirmware').textContent = data.firmwareVersion || 'Não informado';
+        $('camFirmware').textContent = data.camFirmwareVersion || 'Não informado';
+        this.link.ssid = typeof data.ssid === 'string' ? data.ssid : '';
+        $('ssidVal').textContent = this.link.ssid || '-';
+
+        if (typeof data.ip === 'string' && IPV4_RE.test(data.ip) && data.ip !== this.robotIp) {
+          this.robotIp = data.ip;
+          $('ipPill').textContent = data.ip;
+        }
+        if (Number.isFinite(data.flash)) this.renderFlash(data.flash);
+        if (Number.isFinite(data.camStrobe)) this.renderStrobe(data.camStrobe);
+        if (Array.isArray(data.camOpt) && document.activeElement !== $('optBri')) this.renderOpts(data.camOpt);
+        // câmera voltou à rede (reiniciou, caiu o Wi-Fi): reabre o vídeo na hora; um stream encerrado pelo
+        // lado dela não gera evento de erro no <img>, então sem isso a imagem ficaria congelada/vazia.
+        if (typeof data.camOnline === 'boolean') {
+          if (data.camOnline && this.camWasOnline === false && this.camIp) this.setStream(this.camIp, true);
+          this.camWasOnline = data.camOnline;
+        }
+        if (typeof data.camIp === 'string' && IPV4_RE.test(data.camIp) && data.camIp !== this.camIp) {
+          this.camIp = data.camIp;
+          this.setStream(data.camIp);
+        }
+
+        if (Number.isFinite(data.rttMs) && data.rttMs) {
+          $('pingVal').textContent = data.rttMs + ' ms';
+          $('pingPill').dataset.q = data.rttMs < 60 ? 'good' : data.rttMs < 150 ? 'mid' : 'bad';
+        }
+        if (Number.isFinite(data.rssi) && data.rssi) {
+          $('rssiVal').textContent = data.rssi + ' dBm';
+          const q = data.rssi >= -60 ? 'good' : data.rssi >= -75 ? 'mid' : 'bad';
+          $('rssiPill').dataset.q = q;
+          const n = data.rssi >= -55 ? 4 : data.rssi >= -65 ? 3 : data.rssi >= -75 ? 2 : 1;
+          $('rssiBars').querySelectorAll('i').forEach((b, i) => b.classList.toggle('on', i < n));
+        }
+        if (Number.isFinite(data.uptime)) $('upVal').textContent = this.fmtUptime(data.uptime);
+        if (Number.isFinite(data.gait)) $('gaitLabel').textContent = data.gait === 7 ? 'Personalizada' : data.gait === 6 ? 'MK3 lado (#6)' : data.gait === 5 ? 'MK3 (#5)' : '#' + data.gait;
+        this.renderGaits(data);
+
+        const trim = Array.isArray(data.trim) ? data.trim : [];
+        const us = Array.isArray(data.us) ? data.us : [];
+        const deg = Array.isArray(data.deg) ? data.deg : [];
+        for (let i = 0; i < 4; i++) {
+          if (Number.isFinite(trim[i])) {
+            $('trim' + i).textContent = trim[i] + ' µs';
+            const off = trim[i] - 1500;
+            const t = $('legTrim' + i);
+            t.textContent = trim[i] + (off ? ` (${off > 0 ? '+' : ''}${off})` : '');
+            t.className = off ? 'off-pos' : '';
+          }
+          if (Number.isFinite(us[i])) $('legUs' + i).textContent = String(us[i]);
+          if (Number.isFinite(deg[i])) {
+            $('legDeg' + i).textContent = deg[i].toFixed(0) + '°';
+            const clamped = Math.max(0, Math.min(180, deg[i]));
+            $('needle' + i).style.transform = `rotate(${clamped - 90}deg)`;
+          }
+        }
+        if (deg.length === 4 && deg.every(Number.isFinite)) $('legsMeta').textContent = '· ao vivo';
+
+        this.renderLink();
+      },
+
+      fmtUptime(sec) {
+        const s = Math.max(0, Math.floor(sec));
+        const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), r = s % 60;
+        if (h) return `${h}h${String(m).padStart(2, '0')}m`;
+        if (m) return `${m}m${String(r).padStart(2, '0')}s`;
+        return r + 's';
+      },
+
+      // ---- estado de conexão -----------------------------------------------------
+      renderLink() {
+        const { hub, robot, everHub, video, videoErr } = this.link;
+        $('robotSummaryLink').textContent = hub && robot ? 'Conectado' : hub ? 'Desligado' : 'Aguardando';
+        $('robotSummaryCamera').textContent = hub && video ? 'Ao vivo' : 'Sem imagem';
+        $('robotSummaryUptime').textContent = hub && robot ? $('upVal').textContent : '—';
+        let state, label, help = '', title = '', sub = '', kind = '', showOverlay = true;
+
+        if (!hub) {
+          state = everHub ? 'off' : 'wait';
+          label = everHub ? 'Hub offline' : 'Conectando…';
+          help = everHub
+            ? 'O painel perdeu o hub. Veja se o computador do hub está ligado e na mesma rede; ele reconecta sozinho.'
+            : 'Conectando ao hub. Aguarde um instante.';
+          title = label; sub = 'Os comandos ficam parados até voltar.'; kind = state;
+        } else if (!robot) {
+          state = 'off';
+          label = 'Robô desligado';
+          help = 'As pernas estão desligadas ou fora do Wi-Fi. Ligue o robô e espere ele entrar no Wi-Fi. Se já está ligado, confira o IP em Configurações › Conexão.';
+          title = 'Pernas desligadas'; sub = 'A câmera é outra placa: se ela estiver ligada, o vídeo aparece normalmente.'; kind = 'off';
+          showOverlay = !(this.camIp && video);          // câmera online e com imagem: não cobre o vídeo
+        } else {
+          state = 'online';
+          label = 'Conectado';
+          if (!this.camIp) {
+            title = 'Sem imagem'; sub = 'Ligue a placa da câmera e espere ela entrar no Wi-Fi.'; kind = 'wait';
+          } else if (videoErr && !video) {
+            title = 'Sem imagem'; sub = 'Tentando de novo a cada 3 s…'; kind = 'wait';
+          } else {
+            showOverlay = !video;
+            if (showOverlay) { title = 'Abrindo câmera…'; sub = 'Aguarde.'; kind = 'wait'; }
+          }
+        }
+
+        const pill = $('connPill');
+        pill.dataset.state = hub && robot ? 'online' : 'off';
+        $('connText').textContent = hub && robot ? 'K9 ON' : 'K9 OFF';
+        const cameraOnline = hub && (this.camWasOnline === true || (this.camWasOnline !== false && video));
+        $('camConnPill').dataset.state = cameraOnline ? 'online' : 'off';
+        $('camConnText').textContent = cameraOnline ? 'CAM ON' : 'CAM OFF';
+        const hp = $('connHelp');
+        hp.hidden = !help;
+        hp.dataset.state = state;
+        hp.textContent = help;
+        const ov = $('camOverlay');
+        ov.classList.toggle('show', showOverlay);
+        ov.dataset.kind = kind;
+        $('ovTitle').textContent = title;
+        $('ovSub').textContent = sub;
+      },
+
+      // ---- vídeo ------------------------------------------------------------------
+      setStream(ip, bust) {
+        clearTimeout(this.retryTimer);
+        if (document.hidden || this.pageSuspended) return;
+        const img = $('camStream');
+        this.link.video = false; this.link.videoErr = false;
+        $('camFrame').classList.remove('has-video');
+        const query = new URLSearchParams();
+        const token = new URLSearchParams(location.search).get('token');
+        if (token) query.set('token', token);
+        this.streamOpenedAt = Date.now();
+        this.streamViewer = 'v' + Date.now().toString(36) + Math.random().toString(36).slice(2);
+        query.set('viewer', this.streamViewer);
+        query.set('v', this.streamOpenedAt);
+        img.src = '/api/camera/stream?' + query.toString();
+        this.renderLink();
+      },
+
+      // ---- drive: um único tick de 20 Hz decide a fonte ativa -----------------------
+      activeVector() {
+        for (const v of Object.values(this.sources)) if (v[0] !== 0 || v[1] !== 0) return v;
+        return [0, 0];
+      },
+
+      setSource(name, f, t) {
+        f *= this.speedLimit; t *= this.speedLimit;
+        this.sources[name] = [f, t];
+        const [af, at] = this.activeVector();
+        if (af !== 0 || at !== 0) {
+          this.sendDrive(af, at);
+          this.startStreamDrive();
+        } else {
+          this.stopStreamDrive();
+        }
+      },
+
+      clearSources() {
+        for (const k of Object.keys(this.sources)) this.sources[k] = [0, 0];
+        // Parar/pose com o dedo ou a tecla ainda pressionados: trava até soltar (senão o próximo movimento religa o motor)
+        this.keyLatch = this.keyLatch || new Set();
+        for (const k of Object.keys(this.keys || {})) this.keyLatch.add(k);
+        this.inputEpoch = (this.inputEpoch || 0) + 1;
+        this.keys = {};
+        this.stopStreamDrive();
+        $('joyZone').classList.remove('live');
+        $('joyGlow').style.opacity = '0';
+        $('joyStick').style.transform = 'translate(0px, 0px)';
+        $('inputSource').textContent = 'Pronto';
+      },
+
+      sendDrive(fwd, turn) {
+        this.fwd = fwd;
+        this.turn = turn;
+        const sg = (v) => (v >= 0 ? '+' : '') + v.toFixed(2);
+        $('hudDrive').textContent = `F ${sg(fwd)} | T ${sg(turn)}`;
+        // volatile: se a conexão engasgar, descarta em vez de acumular comandos velhos.
+        // O comando ZERO (parada) é confiável: nunca descartado, para o robô não ficar com o último "andar".
+        if (fwd === 0 && turn === 0) this.socket.emit('k9:drive', { fwd, turn });
+        else this.socket.volatile.emit('k9:drive', { fwd, turn });
+      },
+
+      startStreamDrive() {
+        if (this.driveInterval) return;
+        this.driveInterval = setInterval(() => {
+          const [f, t] = this.activeVector();
+          this.sendDrive(f, t);
+        }, DRIVE_HZ_MS);
+      },
+
+      stopStreamDrive() {
+        if (this.driveInterval) {
+          clearInterval(this.driveInterval);
+          this.driveInterval = null;
+        }
+        this.sendDrive(0, 0);
+      },
+
+      stopAll() {
+        this.clearSources();
+        // 'stop' é sempre enviado (se desconectado, fica em fila e é inofensivo)
+        this.socket.emit('k9:cmd', { cmd: 'stop' });
+      },
+
+      emergencyStop() {
+        this.stopAll();
+        if (this.socket.connected) this.toast('Parada de emergência enviada.', 'warn');
+        else this.toast('Sem conexão com o hub: parada ficou em fila. Corte a energia se necessário.', 'error');
+      },
+
+      // Comandos não-seguros nunca entram em fila offline (evita executar ao reconectar)
+      canSend(what) {
+        if (this.socket.connected) return true;
+        this.toast(`Hub desconectado: ${what} não enviado.`, 'error');
+        return false;
+      },
+
+      controlsVersion: 0,
+      applyGaitParams() {
+        if (this.controlsVersion < 2 || !this.canSend('ajuste de marcha')) return;
+        const v = [0,1,2,3,4].map(i => Number($('gaitParam' + i).value));
+        const [f,s,d,p,q] = v;
+        if (!v.every(Number.isFinite) || f<.2 || f>3 || s<5 || s>65 || d<.1 || d>.9 || p< -20 || p>20 || q<.6 || q>1.4 || 2*s*f*Math.max(1,q)/(1-d)>503) {
+          $('gaitResult').textContent = 'Combinação inválida: confira os limites e reduza a frequência, amplitude ou tempo de apoio.'; return;
+        }
+        this.clearSources();
+        $('gaitResult').textContent = 'Enviado. Confira os valores recebidos da placa acima.';
+        this.socket.emit('k9:gait_params', v, result => {
+          if (!result || !result.ok) $('gaitResult').textContent = 'O hub recusou o ajuste. Confira os valores e a versão da placa.';
+        });
+      },
+      renderGaits(data) {
+        if (Array.isArray(data.gaitParams) && data.gaitParams.length === 5) {
+          this.gaitParams = data.gaitParams;
+          const [f,s,d,p,q] = data.gaitParams;
+          $('gaitCurrent').textContent = `Na placa: ${f} Hz · ${s}° · apoio ${d} · inclinação ${p}° · proporção ${q}`;
+        }
+        this.controlsVersion = Number(data.controlsVersion) || 0;
+        document.querySelectorAll('[data-controls-v2]').forEach(b => { b.disabled = this.controlsVersion < 2; });
+        document.querySelectorAll('.gait-options [data-cmd]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.cmd === 'gait' + data.gait)));
+        const varAtiva = window.K9MarchaVar && window.K9MarchaVar.match && window.K9MarchaVar.match(data);
+        if (varAtiva) {
+          $('gaitBadge').textContent = `VAR ${varAtiva.id} · ${varAtiva.rotulo}`;
+        } else {
+          $('gaitBadge').textContent = Number.isFinite(data.gait) && data.gait !== 5 && data.gait !== 6 ? 'Personalizada' : 'MK3';
+        }
+        const NOMES = { 1: 'Padrão 53°', 2: 'Passo 59°', 3: 'Passo 65°', 4: 'Passo 47°', 6: 'MK3 lado', 7: 'Personalizada' };
+        $('gaitMoreState').textContent = NOMES[data.gait] ? 'ativa: ' + NOMES[data.gait] : '';
+        $('gaitHint').textContent = this.controlsVersion >= 2
+          ? 'MK3 · diagonal é a marcha principal (51°, 1,25 Hz). As outras e os testes ficam em "Outras marchas e testes". Selecionar não faz andar; use o controle.'
+          : '';
+      },
+      sendCmd(cmd, label) {
+        if (/^(gait[1-5]|waveleft|getup)$/.test(cmd) && this.controlsVersion < 2) { this.toast('Pernas offline: comando não enviado.', 'warn'); return; }
+        if (cmd === 'stop') { this.stopAll(); return; }
+        if (!this.canSend(label || cmd)) return;
+        if (!cmd.startsWith("sound_")) this.clearSources();    // pose nunca chega com o D-pad/joystick ainda segurados
+        this.socket.emit('k9:cmd', { cmd });
+        if (!this.link.robot) this.toast(`${label || cmd}: robô offline, pode não executar.`, 'warn');
+        else this.toast(`Enviado: ${label || cmd}`, 'info');
+      },
+
+      // ---- opções da imagem (guardadas no robô) ---------------------------------------
+      renderOpts(o) {
+        if (!Array.isArray(o) || o.length !== 5) return;
+        $('optBri').value = o[0];
+        $('optMirror').setAttribute('aria-pressed', String(!!o[1]));
+        $('optFlip').setAttribute('aria-pressed', String(!!o[2]));
+        $('optNight').setAttribute('aria-pressed', String(!!o[3]));
+      },
+      setOpt(key, val) {
+        if (!this.canSend('opção da imagem')) return;
+        this.socket.emit('k9:camopt', { key, val });
+      },
+
+      // ---- lanterna e strobo --------------------------------------------------------
+      renderFlash(level) {
+        this.flashLevel = level;
+        const on = level > 0;
+        const btn = $('flashBtn');
+        if (btn) btn.setAttribute('aria-pressed', String(on));
+        const out = $('flashLabel');
+        if (out) {
+          out.textContent = on ? level + '%' : 'Desligada';
+          out.dataset.on = String(on);
+        }
+        const slider = $('flashSlider');
+        if (slider) {
+          if (on && document.activeElement !== slider) slider.value = level;
+          if (!on && !(Number(slider.value) > 0)) slider.value = 100;
+          slider.dataset.on = String(on);
+          slider.title = on ? 'Brilho da lanterna: ' + level + '%' : 'Brilho da lanterna (desligada)';
+          slider.style.setProperty('--fill', (Number(slider.value) || 0) + '%');
+        }
+      },
+
+      setFlash(level) {
+        const pct = Math.max(0, Math.min(100, Number(level) || 0));
+        if (!this.canSend('lanterna')) { this.renderFlash(this.flashLevel); return; }
+        this.renderFlash(pct);
+        this.pendingFlash = pct;
+        if (this.flashSending) return;
+        this.socket.emit('k9:flash', { level: pct });
+        this.flashSending = setTimeout(() => {
+          this.flashSending = null;
+          if (this.pendingFlash !== pct) this.socket.emit('k9:flash', { level: this.pendingFlash });
+        }, 100);
+      },
+
+      toggleFlash() {
+        const slider = $('flashSlider');
+        this.setFlash(this.flashLevel > 0 ? 0 : (Number(slider ? slider.value : 100) || 100));
+      },
+
+      renderStrobe(hz) {
+        this.strobeHz = hz;
+        const b = $('strobeBtn');
+        if (b) {
+          b.setAttribute('aria-pressed', String(hz > 0));
+          b.setAttribute('aria-label', hz > 0 ? 'Parar o strobo' : 'Strobo'); b.title = hz > 0 ? 'Parar o strobo' : 'Strobo';
+        }
+        if (hz > 0) {
+          const s = $('strobeSlider');
+          if (s && document.activeElement !== s) s.value = hz;
+          const l = $('strobeLabel');
+          if (l) l.textContent = hz + ' Hz';
+          if (s) s.title = 'Velocidade do strobo: ' + hz + ' Hz';
+        }
+      },
+
+      setStrobe(hz) {
+        if (!this.canSend('strobo')) return;
+        hz = Math.max(0, Math.min(30, Number(hz) || 0));
+        this.renderStrobe(hz);
+        this.socket.emit('k9:strobe', { hz });
+      },
+
+      nudgeTrim(leg, delta) {
+        if (!this.canSend('ajuste de trim')) return;
+        this.socket.emit('k9:trim', { leg, delta });
+      },
+
+      setIpError(msg) {
+        const input = $('manualIpInput');
+        $('ipErr').textContent = msg;
+        input.setAttribute('aria-invalid', msg ? 'true' : 'false');
+        input.setCustomValidity(msg ? K9I18n.t(msg) : '');
+      },
+
+      setManualIp() {
+        const input = $('manualIpInput');
+        const val = input.value.trim();
+        const okOctets = IPV4_RE.test(val) && val.split('.').every((o) => Number(o) <= 255);
+        if (!okOctets) {
+          this.setIpError('IPv4 inválido. Exemplo: 192.168.0.42');
+          this.toast('IP inválido. Use o formato 192.168.0.42', 'error');
+          input.focus();
+          return;
+        }
+        this.setIpError('');
+        if (!this.canSend('troca de IP')) return;
+        this.socket.emit('k9:set_ip', { ip: val });
+        this.setStream(val);
+        this.toast('Conectando ao IP ' + val + '…', 'info');
+      },
+
+      // ---- entradas -----------------------------------------------------------------
+      // Joystick: zona morta de 12% (dedo parado não anda), curva m^1.5 (fino perto do centro) e
+      // "imã" de ±10° nos eixos (andar reto / girar no lugar sem esforço). dx,dy em px, y para baixo.
+      shapeStick(dx, dy, maxR) {
+        const DEAD = 0.12, EXPO = 1.5, SNAP = 10 * Math.PI / 180;
+        const dist = Math.hypot(dx, dy);
+        let m = Math.min(1, dist / maxR);
+        if (m <= DEAD) return [0, 0];
+        m = Math.pow((m - DEAD) / (1 - DEAD), EXPO);
+        let ang = Math.atan2(-dy, dx);                 // 0 = direita, +90° = para frente
+        const q = Math.PI / 2, near = Math.round(ang / q) * q;
+        if (Math.abs(ang - near) < SNAP) ang = near;
+        const f = Math.sin(ang) * m, t = Math.cos(ang) * m;
+        const r = (v) => +(Math.abs(v) < 0.005 ? 0 : v).toFixed(2);
+        return [r(f), r(t)];
+      },
+
+      initJoystick() {
+        const zone = $('joyZone');
+        const stick = $('joyStick');
+        let activeId = null;
+        let maxRadius = 56;
+
+        let epoch = 0;                       // quando clearSources() roda, o gesto em curso fica travado até soltar
+        const updatePos = (clientX, clientY) => {
+          if (epoch !== (this.inputEpoch || 0)) return;
+          const rect = zone.getBoundingClientRect();
+          let dx = clientX - (rect.left + rect.width / 2);
+          let dy = clientY - (rect.top + rect.height / 2);
+          const dist = Math.hypot(dx, dy);
+          if (dist > maxRadius) { dx = (dx / dist) * maxRadius; dy = (dy / dist) * maxRadius; }
+          stick.style.transform = `translate(${dx}px, ${dy}px)`;
+          const [sf, st] = this.shapeStick(dx, dy, maxRadius);
+          const glow = $('joyGlow');
+          glow.style.transform = `rotate(${Math.atan2(dx, -dy) * 180 / Math.PI}deg)`;
+          glow.style.opacity = sf || st ? String(0.35 + 0.65 * Math.min(1, dist / maxRadius)) : '0';
+          this.setSource('joy', sf, st);
+        };
+
+        const endDrag = (e) => {
+          if (activeId === null || (e && e.pointerId !== activeId)) return;
+          activeId = null;
+          zone.classList.remove('live');
+          $('joyGlow').style.opacity = '0';
+          stick.style.transform = 'translate(0px, 0px)';
+          this.setSource('joy', 0, 0);
+        };
+
+        zone.addEventListener('pointerdown', (e) => {
+          if (activeId !== null) return;          // ignora o 2º dedo
+          activeId = e.pointerId;
+          epoch = this.inputEpoch || 0;
+          maxRadius = Math.max(20, zone.clientWidth / 2 - stick.offsetWidth / 2);
+          zone.setPointerCapture(e.pointerId);
+          zone.classList.add('live');
+          $('inputSource').textContent = 'Joystick touch';
+          updatePos(e.clientX, e.clientY);
+        });
+        zone.addEventListener('pointermove', (e) => { if (e.pointerId === activeId) updatePos(e.clientX, e.clientY); });
+        zone.addEventListener('pointerup', endDrag);
+        zone.addEventListener('pointercancel', endDrag);
+        zone.addEventListener('pointerleave', (e) => { if (!zone.hasPointerCapture || !zone.hasPointerCapture(e.pointerId)) endDrag(e); });
+        zone.addEventListener('lostpointercapture', endDrag);
+      },
+
+      initDpad() {
+        document.querySelectorAll('[data-dir]').forEach((btn) => {
+          const [f, t] = btn.dataset.dir.split(',').map(Number);
+          const press = (e) => {
+            btn.setPointerCapture(e.pointerId);
+            btn.classList.add('active');
+            $('inputSource').textContent = 'D-Pad';
+            this.setSource('dpad', f, t);
+          };
+          const release = () => { btn.classList.remove('active'); this.setSource('dpad', 0, 0); };
+          btn.addEventListener('pointerdown', press);
+          ['pointerup', 'pointercancel', 'pointerleave', 'lostpointercapture'].forEach((ev) => btn.addEventListener(ev, release));
+        });
+        $('stopBtn').addEventListener('pointerdown', () => this.stopAll());
+        $('stopBtn').addEventListener('click', (e) => { if (e.detail === 0) this.stopAll(); });
+      },
+
+      // Troca entre o joystick redondo e o direcional com setas; a escolha fica neste navegador.
+      initDriveMode() {
+        const joy = $('joyZone'), pad = $('dpadZone'), btn = $('driveModeBtn');
+        if (!joy || !pad || !btn) return;
+        const aplicar = (modo, salvar) => {
+          joy.hidden = modo !== 'joy'; pad.hidden = modo !== 'pad';
+          btn.dataset.mode = modo;
+          const txt = modo === 'joy' ? 'Trocar para o direcional com setas' : 'Trocar para o joystick redondo';
+          btn.setAttribute('aria-label', txt); btn.title = modo === 'joy' ? 'Trocar para setas' : 'Trocar para o joystick';
+          if (salvar) { try { localStorage.setItem('k9.driveMode', modo); } catch (e) { /* sem armazenamento: vale só nesta sessão */ } }
+        };
+        let modo = 'joy';
+        try { modo = localStorage.getItem('k9.driveMode') === 'pad' ? 'pad' : 'joy'; } catch (e) { /* usa o joystick */ }
+        aplicar(modo, false);
+        btn.addEventListener('click', () => {
+          this.setSource('joy', 0, 0); this.setSource('dpad', 0, 0);               // solta qualquer movimento antes de trocar
+          modo = modo === 'joy' ? 'pad' : 'joy'; aplicar(modo, true);
+        });
+        $('dpadStop').addEventListener('click', () => this.stopAll());
+      },
+
+      initKeyboard() {
+        const soundKeys = {"1": ["sound_wake", "Despertar"], "2": ["sound_spell", "Feitiço"], "3": ["sound_sad", "Tristinho"], "4": ["sound_laugh", "Risada digital"], "5": ["sound_crazy", "Confuso"], "6": ["sound_beep", "Bipe"], "7": ["sound_hello", "Olá"], "8": ["sound_alert", "Alerta"], "9": ["sound_robot", "Robô"], "0": ["sound_alarm", "ALARME"]};
+        const recompute = () => {
+          let f = 0, t = 0;
+          if (this.keys['w'] || this.keys['arrowup']) f += 1;
+          if (this.keys['s'] || this.keys['arrowdown']) f -= 1;
+          if (this.keys['a'] || this.keys['arrowleft']) t -= 1;
+          if (this.keys['d'] || this.keys['arrowright']) t += 1;
+          if (f !== 0 || t !== 0) $('inputSource').textContent = 'Teclado WASD';
+          // All controls share the speed limit; hub also ramps acceleration.
+          this.setSource('keys', f, t);
+        };
+        // sliders e caixas de seleção não são "digitação": Espaço e WASD continuam valendo depois de ajustar velocidade/lanterna
+        const typing = (e) => e.target.matches && e.target.matches('input:not([type=range]):not([type=checkbox]):not([type=radio]):not([type=button]), select, textarea, [contenteditable=true]');
+
+        window.addEventListener('keydown', (e) => {
+          if (typing(e) || (e.target.closest && e.target.closest('[contenteditable]:not([contenteditable=false])')) || e.isComposing || e.ctrlKey || e.metaKey || e.altKey) return;
+          const k = e.key.toLowerCase();
+          if (k === ' ') { e.preventDefault(); if (!e.repeat) this.emergencyStop(); return; }
+          if (k === 'f' && !e.repeat) { this.toggleFlash(); return; }
+          if (soundKeys[k]) {
+            e.preventDefault();
+            if (!e.repeat) this.sendCmd(...soundKeys[k]);
+            return;
+          }
+          if (k === 'c') {
+            e.preventDefault();
+            if (!e.repeat) this.sendCmd('sit', 'Sentar');
+            return;
+          }
+          if (k === 'e') {
+            e.preventDefault();
+            if (!e.repeat) this.setStrobe(this.strobeHz > 0 ? 0 : ($('strobeSlider') ? $('strobeSlider').value : 8));
+            return;
+          }
+          if (!['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright'].includes(k)) return;
+          if (this.keyLatch && this.keyLatch.has(k)) return;     // tecla ainda segurada desde o Parar
+          if (!this.keys[k]) {
+            this.keys[k] = true;
+            if (k.startsWith('arrow')) e.preventDefault();
+            recompute();
+          }
+        });
+        window.addEventListener('keyup', (e) => {
+          const k = e.key.toLowerCase();
+          if (this.keyLatch) this.keyLatch.delete(k);
+          if (this.keys[k]) { delete this.keys[k]; recompute(); }
+        });
+      },
+
+      initGamepadLoop() {
+        const dz = (v) => (Math.abs(v) < 0.12 ? 0 : v);
+        let last = 0;
+        const poll = (ts) => {
+          requestAnimationFrame(poll);
+          if (ts - last < DRIVE_HZ_MS) return;   // não inunda: 20 Hz
+          last = ts;
+          const gp = (navigator.getGamepads ? navigator.getGamepads() : [])[0];
+          if (!gp) {                                       // controle sumiu com o analógico empurrado: solta, senão o robô seguia andando
+            if (this.sources.pad[0] !== 0 || this.sources.pad[1] !== 0) this.setSource('pad', 0, 0);
+            return;
+          }
+          const f = dz(-gp.axes[1] || 0);
+          const t = dz(gp.axes[2] || gp.axes[0] || 0);
+          const wasActive = this.sources.pad[0] !== 0 || this.sources.pad[1] !== 0;
+          if (f !== 0 || t !== 0) {
+            $('inputSource').textContent = 'Gamepad USB/BT';
+            this.setSource('pad', f, t);
+          } else if (wasActive) {
+            this.setSource('pad', 0, 0);
+          }
+        };
+        requestAnimationFrame(poll);
+      },
+
+      // Perdeu foco / aba oculta / fechou: solta tudo e para o robô
+      initSafety() {
+        if (window.K9CameraWatchdog && !this.cameraWatchTimer) {
+          const check = window.K9CameraWatchdog({
+            getState: () => ({ ip: this.camIp, suspended: document.hidden || this.pageSuspended,
+              openedAt: this.streamOpenedAt || Date.now(), viewer: this.streamViewer }),
+            getStatus: async viewer => {
+              const query = new URLSearchParams({ viewer });
+              const token = new URLSearchParams(location.search).get('token');
+              if (token) query.set('token', token);
+              const controller = new AbortController();
+              const timeout = setTimeout(() => controller.abort(), 4000);
+              try {
+                const response = await fetch('/api/camera/status?' + query, { cache: 'no-store', signal: controller.signal });
+                if (!response.ok) throw new Error('camera_status');
+                return await response.json();
+              } finally { clearTimeout(timeout); }
+            },
+            reconnect: () => this.setStream(this.camIp, true)
+          });
+          this.cameraWatchTimer = setInterval(check, 3000);
+        }
+        const halt = () => { this.clearSources(); };
+        window.addEventListener('blur', halt);
+        const suspendVideo = () => {
+          clearTimeout(this.retryTimer);
+          clearTimeout(this.qualRetry);
+          $('camStream').removeAttribute('src');
+          this.link.video = false;
+          $('camFrame').classList.remove('has-video');
+        };
+        window.addEventListener('pagehide', () => { this.pageSuspended = true; halt(); suspendVideo(); });
+        window.addEventListener('pageshow', () => {
+          this.pageSuspended = false;
+          if (this.camIp && !document.hidden && !$('camStream').getAttribute('src')) this.setStream(this.camIp, true);
+        });
+        document.addEventListener('visibilitychange', () => {
+          if (document.hidden) {
+            halt();
+            suspendVideo();
+          } else if (this.camIp) {
+            this.setStream(this.camIp, true);
+          }
+        });
+
+        const img = $('camStream');
+        img.addEventListener('load', () => {
+          if (document.hidden || this.pageSuspended || !img.getAttribute('src')) return;
+          this.streamFailures = 0;
+          clearTimeout(this.retryTimer);
+          this.link.video = true; this.link.videoErr = false;
+          $('camFrame').classList.add('has-video');
+          this.renderLink();
+        });
+        img.addEventListener('error', () => {
+          this.link.video = false; this.link.videoErr = true;
+          $('camFrame').classList.remove('has-video');
+          this.renderLink();
+          clearTimeout(this.retryTimer);
+          if (document.hidden || this.pageSuspended) return;
+          const retryMs = 3000; // Matches the relay cooldown after upstream failure.
+          this.retryTimer = setTimeout(() => {
+            if (this.camIp) this.setStream(this.camIp, true);
+          }, retryMs);
+        });
+      }
+    };
+
+    (function () {
+      const q = (id) => document.getElementById(id);
+      const tk = new URLSearchParams(location.search).get('token');
+      const url = (p) => p + (tk ? (p.includes('?') ? '&' : '?') + 'token=' + encodeURIComponent(tk) : '');
+      q('logFull').href = url('/api/log?full=1');
+      const info = async () => {
+        try { const d = await (await fetch(url('/api/log/info'))).json();
+          q('logInfo').textContent = K9I18n.t('Log: {0} KB · memória {1}/{2} KB · heap livre {3} KB (mín {4} KB)', (d.size / 1024).toFixed(1), (d.fsUsed / 1024).toFixed(0), (d.fsTotal / 1024).toFixed(0), (d.heap / 1024).toFixed(0), (d.minHeap / 1024).toFixed(0));
+        } catch (_) { q('logInfo').textContent = 'Robô sem resposta.'; }
+      };
+      q('logLoad').addEventListener('click', async () => {
+        try { const v = q('logView'); v.textContent = await (await fetch(url('/api/log'))).text(); v.scrollTop = v.scrollHeight; info(); }
+        catch (_) { q('logInfo').textContent = 'Falha ao ler o log.'; }
+      });
+      q('logClear').addEventListener('click', async () => {
+        if (!confirm(K9I18n.t('Apagar todo o log do robô?'))) return;
+        await fetch(url('/api/log/clear'), { method: 'POST' }); q('logView').textContent = ''; info();
+      });
+      q('logDetails').addEventListener('toggle', (e) => { if (e.target.open) info(); });
+    })();
+
+    window.addEventListener('DOMContentLoaded', () => {
+      K9Hub.init();
+      // Move the existing controls, preserving their handlers, out of landscape video.
+      const cameraDock = document.createElement('div');
+      cameraDock.className = 'camera-side-dock';
+      document.querySelector('.a-poses').append(cameraDock);
+      const cameraParts = ['.cam-toolbar', '#camHud'].map(selector => {
+        const node = document.querySelector(selector);
+        const anchor = document.createComment('camera-control-home');
+        node.before(anchor);
+        return { node, anchor };
+      });
+      const landscapeLayout = matchMedia('(orientation:landscape) and (max-height:540px)');
+      const placeCameraControls = () => cameraParts.forEach(({node, anchor}) => {
+        if (landscapeLayout.matches) cameraDock.append(node);
+        else anchor.after(node);
+      });
+      landscapeLayout.addEventListener('change', placeCameraControls);
+      placeCameraControls();
+
+      const dialog = document.getElementById('settingsDialog');
+      const advanced = document.getElementById('advDetails');
+      document.getElementById('settingsContent').append(advanced.closest('.a-adv'));
+      document.getElementById('settingsBtn').addEventListener('click', () => { advanced.open = true; dialog.showModal(); });
+      document.getElementById('settingsClose').addEventListener('click', () => dialog.close());
+      dialog.addEventListener('close', () => { advanced.open = false; });
+
+    });
+  </script>
+  <script src="/theme.js"></script>
+  <script src="/hud.js"></script>
+  <script src="/voice-nlu.js"></script>
+  <script src="/i18n/voice-lexicon.js"></script>
+  <script src="/npc.js"></script>
+  <script src="/camera-watchdog.js"></script>
+  <script src="/sound-controls.js"></script>
+  <script src="/pose-tabs.js"></script>
+  <script src="/nome-voz.js"></script>
+  <script src="/gait-tests.js"></script>
+  <script src="/marcha-variacoes.js"></script>
+  <script src="/wifi-config-ui.js"></script>
+  <script src="/experience-core.js"></script>
+  <script src="/experience.js"></script>
+</body>
+</html>

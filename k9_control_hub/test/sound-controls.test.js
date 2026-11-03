@@ -1,0 +1,27 @@
+const test=require('node:test'), assert=require('node:assert/strict'), vm=require('node:vm'), fs=require('node:fs'), path=require('node:path');
+test('volume and mute follow board confirmation and disable offline',()=>{
+ const nodes=Object.fromEntries(['soundMute','soundWaves','soundSlash','soundVolume'].map(id=>[id,{events:{},attrs:{},style:{},addEventListener(k,f){this.events[k]=f;},setAttribute(k,v){this.attrs[k]=v;}}]));
+ const events={},sent=[];
+ const hub={link:{robot:true},canSend:()=>true,socket:{connected:true,on:(k,f)=>events[k]=f,emit:(k,v)=>sent.push(v.cmd)}};
+ const context={window:{},document:{querySelectorAll:()=>[],getElementById:id=>nodes[id]},Date};
+ vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../public/sound-controls.js'),'utf8'),context);
+ context.window.K9SoundControls(hub);
+ assert.equal(nodes.soundVolume.disabled,true);
+ events['k9:telemetry']({soundMuted:false,soundAutomatic:true,soundVolume:100});
+ nodes.soundVolume.value='20';nodes.soundVolume.events.input();nodes.soundVolume.events.change();
+ assert.equal(sent.pop(),'sound_volume_20');
+ events['k9:telemetry']({soundMuted:false,soundAutomatic:true,soundVolume:20});
+ assert.equal(Number(nodes.soundVolume.value),20);
+ nodes.soundMute.events.click();assert.equal(sent.pop(),'sound_mute');
+ events['k9:telemetry']({soundMuted:true,soundAutomatic:true,soundVolume:20});
+ nodes.soundVolume.value='50';nodes.soundVolume.events.change();assert.equal(sent.pop(),'sound_volume_50');
+ events['k9:telemetry']({soundMuted:true,soundAutomatic:true,soundVolume:50});
+ assert.equal(nodes.soundMute.attrs['aria-pressed'],'true');
+ assert.equal(nodes.soundWaves.style.display,'none');
+ events['k9:telemetry']({soundMuted:false,soundAutomatic:true,soundVolume:0});
+ assert.equal(nodes.soundMute.attrs['aria-pressed'],'true');
+ nodes.soundMute.events.click();assert.equal(sent.pop(),'sound_volume_50');
+ events['k9:telemetry']({soundMuted:false,soundAutomatic:true,soundVolume:5});
+ assert.equal(nodes.soundMute.attrs['aria-pressed'],'false');
+ events.disconnect();assert.equal(nodes.soundVolume.disabled,true);
+});

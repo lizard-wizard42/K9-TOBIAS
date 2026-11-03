@@ -1,0 +1,302 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1580 1010" width="1580" height="1010" font-family="DejaVu Sans, Noto Sans CJK SC, Arial, sans-serif">
+<rect width="1580" height="1010" fill="#ffffff"/>
+<text x="30" y="38" font-size="24" fill="#1a1a1a" font-weight="700" text-anchor="start" >K9 "Tobias" MK5 — Esquema elétrico</text>
+<text x="30" y="60" font-size="12.5" fill="#444" font-weight="400" text-anchor="start" >Pack 2S 18650 → 2 conversores LM2596 (motores e lógica) → 4 × MG90S, ESP32 DevKit (pernas), ESP32-CAM e circuito do alto-falante (GPIO25)</text>
+<text x="30" y="78" font-size="12" fill="#444" font-weight="400" text-anchor="start" >Todos os GND são o mesmo nó (GND comum dos dois conversores). Nomes de rede iguais estão ligados entre si. Linha tracejada = proposta/ligação a confirmar no robô.</text>
+<rect x="30" y="120" width="170" height="100" rx="8" fill="#f4f6f8" stroke="#4a4f57" stroke-width="1.8"/>
+<text x="40" y="140" font-size="14" fill="#1a1a1a" font-weight="700">BATERIA 2S</text>
+<text x="40" y="158" font-size="11.5" fill="#444" font-weight="400" text-anchor="start" >2 × 18650 · 7,4 V nominal</text>
+<text x="40" y="174" font-size="11.5" fill="#444" font-weight="400" text-anchor="start" >6,0–8,4 V · 2500 mAh</text>
+<text x="40" y="190" font-size="11.5" fill="#444" font-weight="400" text-anchor="start" >BMS · conector JST</text>
+<polyline points="200,150 235,150" fill="none" stroke="#c1121f" stroke-width="2.2" stroke-linejoin="round"/>
+<text x="204" y="144" font-size="13" fill="#c1121f" font-weight="700" text-anchor="start" >+</text>
+<text x="204" y="196" font-size="14" fill="#2d2d2d" font-weight="700" text-anchor="start" >−</text>
+<polyline points="200,200 215,200" fill="none" stroke="#2d2d2d" stroke-width="2.2" stroke-linejoin="round"/>
+<polyline points="215,200 215,208" fill="none" stroke="#2d2d2d" stroke-width="2.2" stroke-linejoin="round"/>
+<polyline points="201,208 229,208" fill="none" stroke="#2d2d2d" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="206,212 224,212" fill="none" stroke="#2d2d2d" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="211,216 219,216" fill="none" stroke="#2d2d2d" stroke-width="2" stroke-linejoin="round"/>
+<circle cx="218" cy="150" r="3.6" fill="#c1121f"/>
+<rect x="235" y="140" width="64" height="20" fill="#fff" stroke="#c1121f" stroke-width="2" stroke-dasharray="5 3"/>
+<polyline points="299,150 340,150" fill="none" stroke="#c1121f" stroke-width="2.2" stroke-linejoin="round" stroke-dasharray="7 5"/>
+<text x="267" y="134" font-size="11.5" fill="#8a5a00" font-weight="700" text-anchor="middle" >F1 ≈5 A</text>
+<text x="267" y="176" font-size="10.5" fill="#8a5a00" font-weight="400" text-anchor="middle" >(recomendado)</text>
+<polyline points="340,150 352,150" fill="none" stroke="#c1121f" stroke-width="2.2" stroke-linejoin="round"/>
+<circle cx="352" cy="150" r="3.6" fill="#c1121f"/>
+<circle cx="398" cy="150" r="3.6" fill="#c1121f"/>
+<polyline points="352,150 396,138" fill="none" stroke="#c1121f" stroke-width="2.6" stroke-linejoin="round"/>
+<polyline points="398,150 500,150" fill="none" stroke="#c1121f" stroke-width="2.2" stroke-linejoin="round"/>
+<polyline points="450,150 450,360 500,360" fill="none" stroke="#c1121f" stroke-width="2.2" stroke-linejoin="round"/>
+<circle cx="450" cy="150" r="3.6" fill="#c1121f"/>
+<text x="375" y="176" font-size="11.5" fill="#333" font-weight="400" text-anchor="middle" >SW1 · mini jumper</text>
+<text x="375" y="190" font-size="10.5" fill="#555" font-weight="400" text-anchor="middle" >(liga/desliga)</text>
+<text x="456" y="143" font-size="12" fill="#c1121f" font-weight="700" text-anchor="start" >VBAT</text>
+<rect x="30" y="250" width="170" height="86" rx="8" fill="#f4f6f8" stroke="#4a4f57" stroke-width="1.8" stroke-dasharray="8 5"/>
+<text x="40" y="270" font-size="12" fill="#1a1a1a" font-weight="700">JACK DC 9×11×15,6</text>
+<text x="40" y="288" font-size="11.5" fill="#444" font-weight="400" text-anchor="start" >carga do pack</text>
+<text x="40" y="304" font-size="11.5" fill="#444" font-weight="400" text-anchor="start" >ligação a confirmar</text>
+<polyline points="200,270 235,270" fill="none" stroke="#c1121f" stroke-width="2.2" stroke-linejoin="round" stroke-dasharray="7 5"/>
+<text x="240" y="274" font-size="11" fill="#8a5a00" font-weight="400" text-anchor="start" >→ BAT+ (antes do SW1)</text>
+<polyline points="200,314 235,314" fill="none" stroke="#2d2d2d" stroke-width="2.2" stroke-linejoin="round" stroke-dasharray="7 5"/>
+<text x="240" y="318" font-size="11" fill="#8a5a00" font-weight="400" text-anchor="start" >→ BAT−</text>
+<rect x="500" y="120" width="230" height="130" rx="8" fill="#f4f6f8" stroke="#4a4f57" stroke-width="1.8"/>
+<text x="510" y="140" font-size="14" fill="#1a1a1a" font-weight="700">LM2596 nº 1 — MOTORES</text>
+<text x="510" y="158" font-size="11.5" fill="#444" font-weight="400" text-anchor="start" >entrada 3–40 V</text>
+<text x="510" y="174" font-size="11.5" fill="#444" font-weight="400" text-anchor="start" >ajustar saída 5,5–6,0 V</text>
+<text x="510" y="190" font-size="11.5" fill="#444" font-weight="400" text-anchor="start" >no trimmer, SEM carga, antes</text>
+<text x="510" y="206" font-size="11.5" fill="#444" font-weight="400" text-anchor="start" >de ligar os servos</text>
+<polyline points="470,230 500,230" fill="none" stroke="#2d2d2d" stroke-width="2.2" stroke-linejoin="round"/>
+<polyline points="470,230 470,238" fill="none" stroke="#2d2d2d" stroke-width="2.2" stroke-linejoin="round"/>
+<polyline points="456,238 484,238" fill="none" stroke="#2d2d2d" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="461,242 479,242" fill="none" stroke="#2d2d2d" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="466,246 474,246" fill="none" stroke="#2d2d2d" stroke-width="2" stroke-linejoin="round"/>
+<text x="504" y="148" font-size="10.5" fill="#555" font-weight="400" text-anchor="start" >IN+</text>
+<text x="504" y="234" font-size="10.5" fill="#555" font-weight="400" text-anchor="start" >IN−</text>
+<polyline points="730,150 870,150" fill="none" stroke="#e36414" stroke-width="2.2" stroke-linejoin="round"/>
+<text x="722" y="146" font-size="10.5" fill="#555" font-weight="400" text-anchor="end" >OUT+</text>
+<polyline points="730,230 750,230" fill="none" stroke="#2d2d2d" stroke-width="2.2" stroke-linejoin="round"/>
+<polyline points="750,230 750,238" fill="none" stroke="#2d2d2d" stroke-width="2.2" stroke-linejoin="round"/>
+<polyline points="736,238 764,238" fill="none" stroke="#2d2d2d" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="741,242 759,242" fill="none" stroke="#2d2d2d" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="746,246 754,246" fill="none" stroke="#2d2d2d" stroke-width="2" stroke-linejoin="round"/>
+<text x="722" y="234" font-size="10.5" fill="#555" font-weight="400" text-anchor="end" >OUT−</text>
+<circle cx="800" cy="150" r="3.6" fill="#e36414"/>
+<polyline points="800,150 800,162" fill="none" stroke="#e36414" stroke-width="2.2" stroke-linejoin="round"/>
+<polyline points="800,170 800,184" fill="none" stroke="#e36414" stroke-width="2.2" stroke-linejoin="round"/>
+<polyline points="789,162 811,162" fill="none" stroke="#e36414" stroke-width="2.4" stroke-linejoin="round"/>
+<path d="M789,170 Q800,164 811,170" fill="none" stroke="#e36414" stroke-width="2.4"/>
+<text x="792" y="158" font-size="11" fill="#e36414" font-weight="700" text-anchor="end" >+</text>
+<text x="818" y="169" font-size="12" fill="#1a1a1a" font-weight="700" text-anchor="start" >C1 1000 µF</text>
+<text x="818" y="183" font-size="10.5" fill="#555" font-weight="400" text-anchor="start" >≥16 V, baixo ESR</text>
+<polyline points="800,184 800,192" fill="none" stroke="#2d2d2d" stroke-width="2.2" stroke-linejoin="round"/>
+<polyline points="786,192 814,192" fill="none" stroke="#2d2d2d" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="791,196 809,196" fill="none" stroke="#2d2d2d" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="796,200 804,200" fill="none" stroke="#2d2d2d" stroke-width="2" stroke-linejoin="round"/>
+<text x="836" y="141" font-size="12" fill="#e36414" font-weight="700" text-anchor="start" >V_SERVO</text>
+<rect x="500" y="330" width="230" height="130" rx="8" fill="#f4f6f8" stroke="#4a4f57" stroke-width="1.8"/>
+<text x="510" y="350" font-size="14" fill="#1a1a1a" font-weight="700">LM2596 nº 2 — LÓGICA</text>
+<text x="510" y="368" font-size="11.5" fill="#444" font-weight="400" text-anchor="start" >entrada 3–40 V</text>
+<text x="510" y="384" font-size="11.5" fill="#444" font-weight="400" text-anchor="start" >ajustar saída ≈5,0 V</text>
+<text x="510" y="400" font-size="11.5" fill="#444" font-weight="400" text-anchor="start" >(premissa: valor não medido)</text>
+<text x="510" y="416" font-size="11.5" fill="#444" font-weight="400" text-anchor="start" >alimenta ESP32 + CAM + som</text>
+<polyline points="470,440 500,440" fill="none" stroke="#2d2d2d" stroke-width="2.2" stroke-linejoin="round"/>
+<polyline points="470,440 470,448" fill="none" stroke="#2d2d2d" stroke-width="2.2" stroke-linejoin="round"/>
+<polyline points="456,448 484,448" fill="none" stroke="#2d2d2d" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="461,452 479,452" fill="none" stroke="#2d2d2d" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="466,456 474,456" fill="none" stroke="#2d2d2d" stroke-width="2" stroke-linejoin="round"/>
+<text x="504" y="358" font-size="10.5" fill="#555" font-weight="400" text-anchor="start" >IN+</text>
+<text x="504" y="444" font-size="10.5" fill="#555" font-weight="400" text-anchor="start" >IN−</text>
+<polyline points="730,360 760,360 760,600" fill="none" stroke="#1b7f6b" stroke-width="2.2" stroke-linejoin="round"/>
+<text x="722" y="356" font-size="10.5" fill="#555" font-weight="400" text-anchor="end" >OUT+</text>
+<polyline points="730,440 750,440" fill="none" stroke="#2d2d2d" stroke-width="2.2" stroke-linejoin="round"/>
+<polyline points="750,440 750,448" fill="none" stroke="#2d2d2d" stroke-width="2.2" stroke-linejoin="round"/>
+<polyline points="736,448 764,448" fill="none" stroke="#2d2d2d" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="741,452 759,452" fill="none" stroke="#2d2d2d" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="746,456 754,456" fill="none" stroke="#2d2d2d" stroke-width="2" stroke-linejoin="round"/>
+<text x="722" y="444" font-size="10.5" fill="#555" font-weight="400" text-anchor="end" >OUT−</text>
+<text x="771" y="354" font-size="12" fill="#1b7f6b" font-weight="700" text-anchor="start" >V_LOG</text>
+<text x="1010" y="112" font-size="13" fill="#1a1a1a" font-weight="700" text-anchor="start" >4 × servo MG90S (4,8–6 V)</text>
+<rect x="1010" y="125" width="230" height="70" rx="8" fill="#f4f6f8" stroke="#4a4f57" stroke-width="1.8"/>
+<text x="1020" y="145" font-size="14" fill="#1a1a1a" font-weight="700">Servo FL — frente esq.</text>
+<polyline points="990,155 1010,155" fill="none" stroke="#e36414" stroke-width="2.2" stroke-linejoin="round"/>
+<text x="985" y="159" font-size="12" fill="#e36414" font-weight="700" text-anchor="end" >V_SERVO</text>
+<text x="1016" y="159" font-size="10.5" fill="#555" font-weight="400" text-anchor="start" >V+ (vermelho)</text>
+<polyline points="990,171 1010,171" fill="none" stroke="#2d2d2d" stroke-width="2.2" stroke-linejoin="round"/>
+<polyline points="990,171 990,179" fill="none" stroke="#2d2d2d" stroke-width="2.2" stroke-linejoin="round"/>
+<polyline points="976,179 1004,179" fill="none" stroke="#2d2d2d" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="981,183 999,183" fill="none" stroke="#2d2d2d" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="986,187 994,187" fill="none" stroke="#2d2d2d" stroke-width="2" stroke-linejoin="round"/>
+<text x="1016" y="175" font-size="10.5" fill="#555" font-weight="400" text-anchor="start" >GND (marrom)</text>
+<polyline points="1240,163 1270,163" fill="none" stroke="#2b6cb0" stroke-width="2.2" stroke-linejoin="round"/>
+<text x="1234" y="159" font-size="10.5" fill="#555" font-weight="400" text-anchor="end" >SIG (laranja)</text>
+<text x="1277" y="167" font-size="12" fill="#2b6cb0" font-weight="700" text-anchor="start" >SIG_FL</text>
+<rect x="1010" y="207" width="230" height="70" rx="8" fill="#f4f6f8" stroke="#4a4f57" stroke-width="1.8"/>
+<text x="1020" y="227" font-size="14" fill="#1a1a1a" font-weight="700">Servo FR — frente dir.</text>
+<polyline points="990,237 1010,237" fill="none" stroke="#e36414" stroke-width="2.2" stroke-linejoin="round"/>
+<text x="985" y="241" font-size="12" fill="#e36414" font-weight="700" text-anchor="end" >V_SERVO</text>
+<text x="1016" y="241" font-size="10.5" fill="#555" font-weight="400" text-anchor="start" >V+ (vermelho)</text>
+<polyline points="990,253 1010,253" fill="none" stroke="#2d2d2d" stroke-width="2.2" stroke-linejoin="round"/>
+<polyline points="990,253 990,261" fill="none" stroke="#2d2d2d" stroke-width="2.2" stroke-linejoin="round"/>
+<polyline points="976,261 1004,261" fill="none" stroke="#2d2d2d" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="981,265 999,265" fill="none" stroke="#2d2d2d" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="986,269 994,269" fill="none" stroke="#2d2d2d" stroke-width="2" stroke-linejoin="round"/>
+<text x="1016" y="257" font-size="10.5" fill="#555" font-weight="400" text-anchor="start" >GND (marrom)</text>
+<polyline points="1240,245 1270,245" fill="none" stroke="#2b6cb0" stroke-width="2.2" stroke-linejoin="round"/>
+<text x="1234" y="241" font-size="10.5" fill="#555" font-weight="400" text-anchor="end" >SIG (laranja)</text>
+<text x="1277" y="249" font-size="12" fill="#2b6cb0" font-weight="700" text-anchor="start" >SIG_FR</text>
+<rect x="1010" y="289" width="230" height="70" rx="8" fill="#f4f6f8" stroke="#4a4f57" stroke-width="1.8"/>
+<text x="1020" y="309" font-size="14" fill="#1a1a1a" font-weight="700">Servo RL — traseira esq.</text>
+<polyline points="990,319 1010,319" fill="none" stroke="#e36414" stroke-width="2.2" stroke-linejoin="round"/>
+<text x="985" y="323" font-size="12" fill="#e36414" font-weight="700" text-anchor="end" >V_SERVO</text>
+<text x="1016" y="323" font-size="10.5" fill="#555" font-weight="400" text-anchor="start" >V+ (vermelho)</text>
+<polyline points="990,335 1010,335" fill="none" stroke="#2d2d2d" stroke-width="2.2" stroke-linejoin="round"/>
+<polyline points="990,335 990,343" fill="none" stroke="#2d2d2d" stroke-width="2.2" stroke-linejoin="round"/>
+<polyline points="976,343 1004,343" fill="none" stroke="#2d2d2d" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="981,347 999,347" fill="none" stroke="#2d2d2d" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="986,351 994,351" fill="none" stroke="#2d2d2d" stroke-width="2" stroke-linejoin="round"/>
+<text x="1016" y="339" font-size="10.5" fill="#555" font-weight="400" text-anchor="start" >GND (marrom)</text>
+<polyline points="1240,327 1270,327" fill="none" stroke="#2b6cb0" stroke-width="2.2" stroke-linejoin="round"/>
+<text x="1234" y="323" font-size="10.5" fill="#555" font-weight="400" text-anchor="end" >SIG (laranja)</text>
+<text x="1277" y="331" font-size="12" fill="#2b6cb0" font-weight="700" text-anchor="start" >SIG_RL</text>
+<rect x="1010" y="371" width="230" height="70" rx="8" fill="#f4f6f8" stroke="#4a4f57" stroke-width="1.8"/>
+<text x="1020" y="391" font-size="14" fill="#1a1a1a" font-weight="700">Servo RR — traseira dir.</text>
+<polyline points="990,401 1010,401" fill="none" stroke="#e36414" stroke-width="2.2" stroke-linejoin="round"/>
+<text x="985" y="405" font-size="12" fill="#e36414" font-weight="700" text-anchor="end" >V_SERVO</text>
+<text x="1016" y="405" font-size="10.5" fill="#555" font-weight="400" text-anchor="start" >V+ (vermelho)</text>
+<polyline points="990,417 1010,417" fill="none" stroke="#2d2d2d" stroke-width="2.2" stroke-linejoin="round"/>
+<polyline points="990,417 990,425" fill="none" stroke="#2d2d2d" stroke-width="2.2" stroke-linejoin="round"/>
+<polyline points="976,425 1004,425" fill="none" stroke="#2d2d2d" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="981,429 999,429" fill="none" stroke="#2d2d2d" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="986,433 994,433" fill="none" stroke="#2d2d2d" stroke-width="2" stroke-linejoin="round"/>
+<text x="1016" y="421" font-size="10.5" fill="#555" font-weight="400" text-anchor="start" >GND (marrom)</text>
+<polyline points="1240,409 1270,409" fill="none" stroke="#2b6cb0" stroke-width="2.2" stroke-linejoin="round"/>
+<text x="1234" y="405" font-size="10.5" fill="#555" font-weight="400" text-anchor="end" >SIG (laranja)</text>
+<text x="1277" y="413" font-size="12" fill="#2b6cb0" font-weight="700" text-anchor="start" >SIG_RR</text>
+<text x="1010" y="462" font-size="11.5" fill="#444" font-weight="400" text-anchor="start" >Os 4 servos dividem o trilho V_SERVO e o capacitor C1.</text>
+<rect x="890" y="500" width="270" height="225" rx="8" fill="#f4f6f8" stroke="#4a4f57" stroke-width="1.8"/>
+<text x="900" y="520" font-size="14" fill="#1a1a1a" font-weight="700">ESP32 DevKit — pernas</text>
+<text x="900" y="538" font-size="11.5" fill="#444" font-weight="400" text-anchor="start" >30 pinos · micro-USB</text>
+<text x="900" y="554" font-size="11.5" fill="#444" font-weight="400" text-anchor="start" >firmware 1.6.3</text>
+<polyline points="760,600 890,600" fill="none" stroke="#1b7f6b" stroke-width="2.2" stroke-linejoin="round"/>
+<text x="896" y="604" font-size="11" fill="#555" font-weight="400" text-anchor="start" >VIN / 5 V</text>
+<circle cx="795" cy="600" r="3.6" fill="#1b7f6b"/>
+<polyline points="795,600 795,612" fill="none" stroke="#1b7f6b" stroke-width="2.2" stroke-linejoin="round"/>
+<polyline points="795,620 795,634" fill="none" stroke="#1b7f6b" stroke-width="2.2" stroke-linejoin="round"/>
+<polyline points="784,612 806,612" fill="none" stroke="#1b7f6b" stroke-width="2.4" stroke-linejoin="round"/>
+<path d="M784,620 Q795,614 806,620" fill="none" stroke="#1b7f6b" stroke-width="2.4"/>
+<text x="787" y="608" font-size="11" fill="#1b7f6b" font-weight="700" text-anchor="end" >+</text>
+<text x="813" y="619" font-size="12" fill="#1a1a1a" font-weight="700" text-anchor="start" >C2 470 µF</text>
+<text x="813" y="633" font-size="10.5" fill="#555" font-weight="400" text-anchor="start" >≥10 V</text>
+<polyline points="795,634 795,642" fill="none" stroke="#2d2d2d" stroke-width="2.2" stroke-linejoin="round"/>
+<polyline points="781,642 809,642" fill="none" stroke="#2d2d2d" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="786,646 804,646" fill="none" stroke="#2d2d2d" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="791,650 799,650" fill="none" stroke="#2d2d2d" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="870,625 890,625" fill="none" stroke="#2d2d2d" stroke-width="2.2" stroke-linejoin="round"/>
+<polyline points="870,625 870,633" fill="none" stroke="#2d2d2d" stroke-width="2.2" stroke-linejoin="round"/>
+<polyline points="856,633 884,633" fill="none" stroke="#2d2d2d" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="861,637 879,637" fill="none" stroke="#2d2d2d" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="866,641 874,641" fill="none" stroke="#2d2d2d" stroke-width="2" stroke-linejoin="round"/>
+<text x="896" y="629" font-size="11" fill="#555" font-weight="400" text-anchor="start" >GND</text>
+<polyline points="1160,600 1195,600" fill="none" stroke="#2b6cb0" stroke-width="2.2" stroke-linejoin="round"/>
+<text x="1154" y="604" font-size="11" fill="#555" font-weight="400" text-anchor="end" >GPIO14</text>
+<text x="1202" y="604" font-size="12" fill="#2b6cb0" font-weight="700" text-anchor="start" >SIG_FL</text>
+<polyline points="1160,622 1195,622" fill="none" stroke="#2b6cb0" stroke-width="2.2" stroke-linejoin="round"/>
+<text x="1154" y="626" font-size="11" fill="#555" font-weight="400" text-anchor="end" >GPIO15</text>
+<text x="1202" y="626" font-size="12" fill="#2b6cb0" font-weight="700" text-anchor="start" >SIG_FR</text>
+<polyline points="1160,644 1195,644" fill="none" stroke="#2b6cb0" stroke-width="2.2" stroke-linejoin="round"/>
+<text x="1154" y="648" font-size="11" fill="#555" font-weight="400" text-anchor="end" >GPIO13</text>
+<text x="1202" y="648" font-size="12" fill="#2b6cb0" font-weight="700" text-anchor="start" >SIG_RL</text>
+<polyline points="1160,666 1195,666" fill="none" stroke="#2b6cb0" stroke-width="2.2" stroke-linejoin="round"/>
+<text x="1154" y="670" font-size="11" fill="#555" font-weight="400" text-anchor="end" >GPIO2</text>
+<text x="1202" y="670" font-size="12" fill="#2b6cb0" font-weight="700" text-anchor="start" >SIG_RR</text>
+<polyline points="1160,688 1195,688" fill="none" stroke="#2b6cb0" stroke-width="2.2" stroke-linejoin="round"/>
+<text x="1154" y="692" font-size="11" fill="#555" font-weight="400" text-anchor="end" >GPIO25</text>
+<text x="1202" y="692" font-size="12" fill="#2b6cb0" font-weight="700" text-anchor="start" >AUDIO_GPIO</text>
+<text x="900" y="708" font-size="10.5" fill="#666" font-weight="400" text-anchor="start" >Sinais de servo: PWM 50 Hz (LEDC)</text>
+<rect x="890" y="770" width="270" height="110" rx="8" fill="#f4f6f8" stroke="#4a4f57" stroke-width="1.8"/>
+<text x="900" y="790" font-size="14" fill="#1a1a1a" font-weight="700">ESP32-CAM AI-Thinker (OV3660)</text>
+<text x="900" y="808" font-size="11.5" fill="#444" font-weight="400" text-anchor="start" >câmera MJPEG, lanterna GPIO4</text>
+<text x="900" y="824" font-size="11.5" fill="#444" font-weight="400" text-anchor="start" >sem fios p/ o ESP das pernas (Wi-Fi)</text>
+<polyline points="760,600 760,845" fill="none" stroke="#1b7f6b" stroke-width="2.2" stroke-linejoin="round"/>
+<polyline points="760,845 890,845" fill="none" stroke="#1b7f6b" stroke-width="2.2" stroke-linejoin="round"/>
+<circle cx="795" cy="845" r="3.6" fill="#1b7f6b"/>
+<polyline points="795,845 795,857" fill="none" stroke="#1b7f6b" stroke-width="2.2" stroke-linejoin="round"/>
+<polyline points="795,865 795,879" fill="none" stroke="#1b7f6b" stroke-width="2.2" stroke-linejoin="round"/>
+<polyline points="784,857 806,857" fill="none" stroke="#1b7f6b" stroke-width="2.4" stroke-linejoin="round"/>
+<path d="M784,865 Q795,859 806,865" fill="none" stroke="#1b7f6b" stroke-width="2.4"/>
+<text x="787" y="853" font-size="11" fill="#1b7f6b" font-weight="700" text-anchor="end" >+</text>
+<text x="813" y="864" font-size="12" fill="#1a1a1a" font-weight="700" text-anchor="start" >C3 470 µF</text>
+<text x="813" y="878" font-size="10.5" fill="#555" font-weight="400" text-anchor="start" >≥10 V</text>
+<polyline points="795,879 795,887" fill="none" stroke="#2d2d2d" stroke-width="2.2" stroke-linejoin="round"/>
+<polyline points="781,887 809,887" fill="none" stroke="#2d2d2d" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="786,891 804,891" fill="none" stroke="#2d2d2d" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="791,895 799,895" fill="none" stroke="#2d2d2d" stroke-width="2" stroke-linejoin="round"/>
+<text x="896" y="849" font-size="11" fill="#555" font-weight="400" text-anchor="start" >5 V</text>
+<polyline points="870,865 890,865" fill="none" stroke="#2d2d2d" stroke-width="2.2" stroke-linejoin="round"/>
+<polyline points="870,865 870,873" fill="none" stroke="#2d2d2d" stroke-width="2.2" stroke-linejoin="round"/>
+<polyline points="856,873 884,873" fill="none" stroke="#2d2d2d" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="861,877 879,877" fill="none" stroke="#2d2d2d" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="866,881 874,881" fill="none" stroke="#2d2d2d" stroke-width="2" stroke-linejoin="round"/>
+<text x="896" y="869" font-size="11" fill="#555" font-weight="400" text-anchor="start" >GND</text>
+<circle cx="760" cy="600" r="3.6" fill="#1b7f6b"/>
+<g transform="translate(60,170)">
+<text x="1160" y="340" font-size="13" fill="#1a1a1a" font-weight="700" text-anchor="start" >Speaker de PC (som, emoções, músicas)</text>
+<rect x="1250" y="390" width="150" height="50" rx="8" fill="#f4f6f8" stroke="#4a4f57" stroke-width="1.8"/>
+<text x="1260" y="410" font-size="12" fill="#1a1a1a" font-weight="700">SPEAKER DE PC</text>
+<text x="1260" y="428" font-size="11.5" fill="#444" font-weight="400" text-anchor="start" >12×8 (gabinete/BIOS)</text>
+<polyline points="1285,390 1285,365 1430,365 1430,455" fill="none" stroke="#1b7f6b" stroke-width="2.2" stroke-linejoin="round"/>
+<text x="1297" y="366" font-size="12" fill="#1b7f6b" font-weight="700" text-anchor="start" ></text>
+<text x="1291" y="359" font-size="11" fill="#1b7f6b" font-weight="700" text-anchor="start" >V_LOG</text>
+<circle cx="1285" cy="365" r="3.6" fill="#1b7f6b"/>
+<polyline points="1345,440 1345,505" fill="none" stroke="#2b6cb0" stroke-width="2.2" stroke-linejoin="round"/>
+<circle cx="1345" cy="505" r="3.6" fill="#2b6cb0"/>
+<polyline points="1430,455 1430,470" fill="none" stroke="#1b7f6b" stroke-width="2.2" stroke-linejoin="round"/>
+<polygon points="1420,490 1440,490 1430,472" fill="#fff" stroke="#2d2d2d" stroke-width="2"/>
+<polyline points="1420,472 1440,472" fill="none" stroke="#2d2d2d" stroke-width="2.8" stroke-linejoin="round"/>
+<polyline points="1430,490 1430,505" fill="none" stroke="#2d2d2d" stroke-width="2.2" stroke-linejoin="round"/>
+<polyline points="1345,505 1430,505" fill="none" stroke="#2d2d2d" stroke-width="2.2" stroke-linejoin="round"/>
+<text x="1452" y="484" font-size="12" fill="#1a1a1a" font-weight="700" text-anchor="start" >D1</text>
+<text x="1452" y="498" font-size="10.5" fill="#555" font-weight="400" text-anchor="start" >1N4007</text>
+<text x="1452" y="470" font-size="10" fill="#555" font-weight="400" text-anchor="start" >(faixa</text>
+<text x="1452" y="458" font-size="10" fill="#555" font-weight="400" text-anchor="start" >no +)</text>
+<polyline points="1345,505 1345,540" fill="none" stroke="#2d2d2d" stroke-width="2.2" stroke-linejoin="round"/>
+<text x="1352" y="528" font-size="11" fill="#555" font-weight="400" text-anchor="start" >C</text>
+<circle cx="1330" cy="565" r="26" fill="#fff" stroke="#2d2d2d" stroke-width="2"/>
+<polyline points="1322,552 1322,578" fill="none" stroke="#2d2d2d" stroke-width="3" stroke-linejoin="round"/>
+<polyline points="1322,558 1345,540" fill="none" stroke="#2d2d2d" stroke-width="2.2" stroke-linejoin="round"/>
+<polyline points="1322,572 1345,590" fill="none" stroke="#2d2d2d" stroke-width="2.2" stroke-linejoin="round"/>
+<polyline points="1345,590 1345,625" fill="none" stroke="#2d2d2d" stroke-width="2.2" stroke-linejoin="round"/>
+<polyline points="1345,625 1345,633" fill="none" stroke="#2d2d2d" stroke-width="2.2" stroke-linejoin="round"/>
+<polyline points="1331,633 1359,633" fill="none" stroke="#2d2d2d" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="1336,637 1354,637" fill="none" stroke="#2d2d2d" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="1341,641 1349,641" fill="none" stroke="#2d2d2d" stroke-width="2" stroke-linejoin="round"/>
+<polygon points="1336,583 1341,576 1332,575" fill="#2d2d2d"/>
+<text x="1358" y="584" font-size="11" fill="#555" font-weight="400" text-anchor="start" >E</text>
+<polyline points="1290,565 1322,565" fill="none" stroke="#2b6cb0" stroke-width="2.2" stroke-linejoin="round"/>
+<text x="1296" y="556" font-size="11" fill="#555" font-weight="400" text-anchor="start" >B</text>
+<polyline points="1210,565 1222,565" fill="none" stroke="#2b6cb0" stroke-width="2.2" stroke-linejoin="round"/>
+<polyline points="1258,565 1270,565" fill="none" stroke="#2b6cb0" stroke-width="2.2" stroke-linejoin="round"/>
+<rect x="1222" y="557" width="36" height="16" fill="#fff" stroke="#2b6cb0" stroke-width="2"/>
+<text x="1240" y="552" font-size="12" fill="#1a1a1a" font-weight="700" text-anchor="middle" ></text>
+<text x="1240" y="592" font-size="12" fill="#1a1a1a" font-weight="700" text-anchor="middle" >R1 220 Ω</text>
+<polyline points="1270,565 1290,565" fill="none" stroke="#2b6cb0" stroke-width="2.2" stroke-linejoin="round"/>
+<polyline points="1180,565 1210,565" fill="none" stroke="#2b6cb0" stroke-width="2.2" stroke-linejoin="round"/>
+<text x="1176" y="556" font-size="11.5" fill="#2b6cb0" font-weight="700" text-anchor="start" >AUDIO_GPIO</text>
+<text x="1290" y="676" font-size="12.5" fill="#1a1a1a" font-weight="700" text-anchor="start" >Q1 TIP41C (TO-220)</text>
+<text x="1290" y="692" font-size="10.5" fill="#555" font-weight="400" text-anchor="start" >inscrições de frente, terminais p/ baixo:</text>
+<text x="1290" y="706" font-size="10.5" fill="#555" font-weight="400" text-anchor="start" >1 = Base · 2 = Coletor · 3 = Emissor</text>
+<text x="1290" y="720" font-size="10.5" fill="#555" font-weight="400" text-anchor="start" >(a aba metálica também é o coletor)</text>
+</g>
+<rect x="30" y="420" width="420" height="345" rx="8" fill="#fffaf0" stroke="#4a4f57" stroke-width="1.8"/>
+<text x="40" y="440" font-size="14" fill="#1a1a1a" font-weight="700">Notas de montagem e segurança</text>
+<text x="42" y="462" font-size="11.2" fill="#333" font-weight="400" text-anchor="start" >1. Ajuste os dois LM2596 com multímetro e SEM carga antes de ligar</text>
+<text x="42" y="481" font-size="11.2" fill="#333" font-weight="400" text-anchor="start" > qualquer servo ou placa (de fábrica a saída pode passar de 12 V).</text>
+<text x="42" y="500" font-size="11.2" fill="#333" font-weight="400" text-anchor="start" >2. Nunca ligue o pack (6–8,4 V) direto nos servos: MG90S = 4,8–6 V.</text>
+<text x="42" y="519" font-size="11.2" fill="#333" font-weight="400" text-anchor="start" >3. Os 4 servos travados puxam ~3 A (limite do LM2596): por isso</text>
+<text x="42" y="538" font-size="11.2" fill="#333" font-weight="400" text-anchor="start" >  os motores têm conversor próprio e o capacitor C1.</text>
+<text x="42" y="557" font-size="11.2" fill="#333" font-weight="400" text-anchor="start" >4. Polaridade: o LM2596 não tem proteção contra inversão.</text>
+<text x="42" y="576" font-size="11.2" fill="#333" font-weight="400" text-anchor="start" >5. GND dos dois conversores, das placas e do emissor do TIP41C</text>
+<text x="42" y="595" font-size="11.2" fill="#333" font-weight="400" text-anchor="start" >  é um só nó.</text>
+<text x="42" y="614" font-size="11.2" fill="#333" font-weight="400" text-anchor="start" >6. Ligação do jack de carga e do jumper (SW1) é proposta: o pack</text>
+<text x="42" y="633" font-size="11.2" fill="#333" font-weight="400" text-anchor="start" >  tem BMS, mas não é carregador. Use carregador 2S 8,4 V (CC/CV).</text>
+<text x="42" y="652" font-size="11.2" fill="#333" font-weight="400" text-anchor="start" >7. Fusível e medição de tensão do pack não existem no firmware</text>
+<text x="42" y="671" font-size="11.2" fill="#333" font-weight="400" text-anchor="start" >  atual (não há leitura de bateria).</text>
+<text x="42" y="690" font-size="11.2" fill="#333" font-weight="400" text-anchor="start" >8. Pino GPIO2 (RR) é de boot do ESP32: não force nível na partida.</text>
+<text x="42" y="709" font-size="11.2" fill="#333" font-weight="400" text-anchor="start" >9. Speaker de PC em 5 V regulados; impedância não medida.</text>
+<rect x="30" y="785" width="480" height="110" rx="8" fill="#fff" stroke="#4a4f57" stroke-width="1.8"/>
+<text x="40" y="805" font-size="14" fill="#1a1a1a" font-weight="700">Legenda</text>
+<polyline points="42,825 78,825" fill="none" stroke="#c1121f" stroke-width="3" stroke-linejoin="round"/>
+<text x="86" y="829" font-size="11.5" fill="#1a1a1a" font-weight="400" text-anchor="start" >VBAT (pack, 6,0–8,4 V)</text>
+<polyline points="42,842 78,842" fill="none" stroke="#e36414" stroke-width="3" stroke-linejoin="round"/>
+<text x="86" y="846" font-size="11.5" fill="#1a1a1a" font-weight="400" text-anchor="start" >V_SERVO (≈5,5–6,0 V, motores)</text>
+<polyline points="42,859 78,859" fill="none" stroke="#1b7f6b" stroke-width="3" stroke-linejoin="round"/>
+<text x="86" y="863" font-size="11.5" fill="#1a1a1a" font-weight="400" text-anchor="start" >V_LOG (≈5 V, lógica e som)</text>
+<polyline points="42,876 78,876" fill="none" stroke="#2b6cb0" stroke-width="3" stroke-linejoin="round"/>
+<text x="86" y="880" font-size="11.5" fill="#1a1a1a" font-weight="400" text-anchor="start" >sinais (GPIO)</text>
+<polyline points="290,825 326,825" fill="none" stroke="#2d2d2d" stroke-width="2.2" stroke-linejoin="round" stroke-dasharray="7 5"/>
+<text x="334" y="829" font-size="11.5" fill="#1a1a1a" font-weight="400" text-anchor="start" >proposta / a confirmar</text>
+<text x="290" y="846" font-size="11.5" fill="#1a1a1a" font-weight="400" text-anchor="start" >⏚ = GND comum</text>
+<text x="30" y="925" font-size="11.5" fill="#555" font-weight="400" text-anchor="start" >Referência: objetos do modelo MK5/Blender/MK5_ATUAL.blend (fios, LM1/LM2, CAP_*, Q1_TIP41C, R1_base_220R, D1_1N4007) e docs/AUDIO.md, docs/BATTERY.md.</text>
+<text x="30" y="943" font-size="11.5" fill="#555" font-weight="400" text-anchor="start" >Pinos do firmware das pernas (k9v2-1_firmware/src/main.cpp): FL=14, FR=15, RL=13, RR=2; som: GPIO25 (LEDC canal 6).</text>
+<text x="30" y="961" font-size="11.5" fill="#555" font-weight="400" text-anchor="start" >Esquema de documentação: não é um projeto de PCB. Confirme valores e ligações no hardware real antes de energizar.</text>
+</svg>
