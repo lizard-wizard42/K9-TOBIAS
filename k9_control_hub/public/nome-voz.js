@@ -20,7 +20,7 @@
   function aplicarNome(n) {
     nome = n || 'K9';
     const h = document.querySelector('.brand h1'); if (h) h.textContent = nome;
-    const s = document.querySelector('.brand small'); if (s) s.textContent = 'K9-MK3 · Painel de comando';
+    const s = document.querySelector('.brand small'); if (s) s.textContent = 'K9-MK5 · Painel de comando';
     document.title = t('{0} — Controle · Lizard Wizard', nome);
     const campo = $('nomeCampo'); if (campo && document.activeElement !== campo) campo.value = nome;
     status();

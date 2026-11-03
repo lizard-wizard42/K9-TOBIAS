@@ -1,11 +1,11 @@
 /* Dicionário do painel, parte 1: textos fixos do index.html. Linhas: [pt, en, es, fr, de, zh]. */
 (function (root) {
   const rows = [
-    [`K9-MK3 — Controle · Lizard Wizard`, `K9-MK3 — Control · Lizard Wizard`, `K9-MK3 — Control · Lizard Wizard`, `K9-MK3 — Contrôle · Lizard Wizard`, `K9-MK3 — Steuerung · Lizard Wizard`, `K9-MK3 — 控制 · Lizard Wizard`],
+    [`K9-MK5 — Controle · Lizard Wizard`, `K9-MK5 — Control · Lizard Wizard`, `K9-MK5 — Control · Lizard Wizard`, `K9-MK5 — Contrôle · Lizard Wizard`, `K9-MK5 — Steuerung · Lizard Wizard`, `K9-MK5 — 控制 · Lizard Wizard`],
     [`{0} — Controle · Lizard Wizard`, `{0} — Control · Lizard Wizard`, `{0} — Control · Lizard Wizard`, `{0} — Contrôle · Lizard Wizard`, `{0} — Steuerung · Lizard Wizard`, `{0} — 控制 · Lizard Wizard`],
     [`Logo K9`, `K9 logo`, `Logotipo de K9`, `Logo K9`, `K9-Logo`, `K9 标志`],
     [`Painel de comando`, `Control panel`, `Panel de mando`, `Panneau de commande`, `Steuerpult`, `控制面板`],
-    [`K9-MK3 · Painel de comando`, `K9-MK3 · Control panel`, `K9-MK3 · Panel de mando`, `K9-MK3 · Panneau de commande`, `K9-MK3 · Steuerpult`, `K9-MK3 · 控制面板`],
+    [`K9-MK5 · Painel de comando`, `K9-MK5 · Control panel`, `K9-MK5 · Panel de mando`, `K9-MK5 · Panneau de commande`, `K9-MK5 · Steuerpult`, `K9-MK5 · 控制面板`],
     [`Parar movimento (tecla Espaço)`, `Stop moving (Space key)`, `Detener el movimiento (tecla Espacio)`, `Arrêter le mouvement (touche Espace)`, `Bewegung stoppen (Leertaste)`, `停止移动（空格键）`],
     [`Parar movimento`, `Stop moving`, `Detener el movimiento`, `Arrêter le mouvement`, `Bewegung stoppen`, `停止移动`],
     [`Parar (Espaço)`, `Stop (Space)`, `Parar (Espacio)`, `Arrêt (Espace)`, `Stopp (Leertaste)`, `停止（空格）`],

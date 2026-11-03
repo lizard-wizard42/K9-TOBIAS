@@ -54,7 +54,7 @@ test('idioma inválido volta para o português', () => { assert.equal(I.setLang(
 test('todo texto fixo do index.html está no dicionário', () => {
   const html = fs.readFileSync(path.join(__dirname, '../public/index.html'), 'utf8').replace(/<script[\s\S]*?<\/script>/g, '').replace(/<style[\s\S]*?<\/style>/g, '').replace(/<svg[\s\S]*?<\/svg>/g, '').replace(/<kbd[\s\S]*?<\/kbd>/g, '');
   const exato = new Set(rows.map((r) => r[0].replace(/\s+/g, ' ').trim()));
-  const ignorar = new Set(['K9', '-MK3', 'K9 OFF', 'CAM OFF', 'HUB', '— ms', '— dBm', 'F +0.00 T +0.00', '8 Hz', 'MK3', 'K9 · MK3', 'F +0.00 | T +0.00', '×', '60%', '-', '192.168.0.x', 'Lizard_Wizard // Creative Lab', 'K9-MK3 · est. 2026', '01', '02', '03', 'CÂMERA K9']);
+  const ignorar = new Set(['K9', '-MK5', 'K9 OFF', 'CAM OFF', 'HUB', '— ms', '— dBm', 'F +0.00 T +0.00', '8 Hz', 'MK3', 'K9 · MK5', 'F +0.00 | T +0.00', '×', '60%', '-', '192.168.0.x', 'Lizard_Wizard // Creative Lab', 'K9-MK5 · est. 2026', '01', '02', '03', 'CÂMERA K9']);
   I.setLang('pt');
   const faltando = new Set();
   const textos = [...html.matchAll(/>([^<>]+)</g)].map((m) => m[1].replace(/&[a-z]+;/g, ' ').replace(/\s+/g, ' ').trim());

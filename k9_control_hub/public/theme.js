@@ -21,7 +21,7 @@
 
 /* ester egg: toque 7 vezes no ✦ do cabeçalho (ou abra o console) */
 (function () {
-  try { console.log('%c✦ K9-MK3 %c// feito com código + café + magia', 'font:700 14px monospace;color:#789353', 'font:12px monospace;color:#ef593f'); } catch (e) {}
+  try { console.log('%c✦ K9-MK5 %c// feito com código + café + magia', 'font:700 14px monospace;color:#789353', 'font:12px monospace;color:#ef593f'); } catch (e) {}
   var mark = document.querySelector('.brand-mark'); if (!mark) return;
   var n = 0, timer = null;
   mark.addEventListener('click', function () {
