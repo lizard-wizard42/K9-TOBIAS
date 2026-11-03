@@ -26,7 +26,7 @@ Credit for the original K9V2.1 design and the firmware/gait portions adapted fro
 | Camera firmware — AI-Thinker ESP32-CAM | [Board guide](k9v2-1_firmware/boards/esp32cam.md) · PlatformIO target `esp32cam` |
 | Web control panel and local hub | [k9_control_hub/](k9_control_hub/) |
 | Optional voice/AI control and Android app | [k9_vivo/](k9_vivo/) |
-| Printable parts, 3MF projects and model terms | [MakerWorld — Lizard Wizard](https://makerworld.com/en/@lizardwizard42/upload) — Tobias MK5 submitted for review; direct model link pending. See [hardware and printing](docs/PRINTING.md) |
+| Printable parts, 3MF projects and model terms | [Tobias MK5 on MakerWorld](https://makerworld.com/pt/models/3541274-tobias-mk5-esp32-walking-robot-camera) — 25 STLs and six-plate Bambu A1 profile. See [hardware and printing](docs/PRINTING.md) |
 | Wiring and bill of materials | [Hardware notes](docs/hardware/README.md) · [BOM](docs/hardware/BILL-OF-MATERIALS.md) |
 | Documentation | [docs/README.md](docs/README.md) |
 
