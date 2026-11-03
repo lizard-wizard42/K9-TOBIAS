@@ -4,7 +4,11 @@ The project owner confirmed on **3 November 2026** that the latest MK5 revision 
 
 The 25 printable parts, Bambu A1 project (0.4 mm nozzle), Ender-3 V3 SE project (black, 0.4 mm nozzle) and Blender/CAD source are **not distributed in this GitHub repository**. The authoritative model download will be the MakerWorld listing.
 
-**MakerWorld link: pending.** Add the exact public listing URL here and in the root README after publication. Do not invent a listing URL.
+**STLs and A1 profile:** [Lizard Wizard on MakerWorld](https://makerworld.com/en/@lizardwizard42/upload).
+
+**Publication status — 3 November 2026:** Tobias MK5 was submitted to MakerWorld and is under platform review (“Verifying”). Its direct public model/download URL is not available yet. Use the profile above to find the listing once approved; this is not a claim that the files are already publicly downloadable. The README and this guide will use the exact model permalink when it is released.
+
+[Project page and interactive assembly](https://www.lizardwizard.io/tobias-mk5/) · [Complete build video](https://youtu.be/sWIoWc-5ltM)
 
 ## Model permissions
 
