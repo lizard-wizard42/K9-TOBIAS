@@ -4,6 +4,14 @@ Software for Tobias (K9 MK5), a DIY, four-servo robot dog: two ESP32 firmwares, 
 
 **Hardware status:** the latest MK5 revision has been printed, assembled and tested, as confirmed by the project owner on 3 November 2026. The public legs source is **1.7.0-public.1**; the camera source is **1.0.14**. The assembled robot was tested with the private 1.7.0 legs build. The public audio-only variation has compile/native-test validation; it has not been flashed during publication.
 
+## Giving Tobias a little more life
+
+I am developing **AI-assisted control** to give Tobias more personality and richer interaction. The current robot has browser controls, camera video, sounds and scripted emotions; the optional Vivo voice/AI layer is experimental. Broader autonomy and camera-based behavior are ongoing work, not finished features.
+
+Want to help? Contributions in behavior, vision, voice, motion reliability, dashboard UX, tests and documentation are welcome. Read the [AI roadmap](docs/AI-ROADMAP.md) and [contribution guide](CONTRIBUTING.md), then propose a focused issue or pull request. You can contribute without owning the robot; identify simulated and physical validation separately.
+
+[Watch the build](https://youtu.be/sWIoWc-5ltM) · [Project page](https://www.lizardwizard.io/tobias-mk5/)
+
 ## Inspiration and original base
 
 Tobias was inspired by the robots from **[miniRobo](https://minirobo.io/)**. I used its **[K9V2.1 model](https://www.minirobo.io/projects/k9v2-1)** as the starting point for this build, then developed the Tobias MK5 body changes, dual-board ESP32 integration, web control panel, sounds, emotions and optional voice features.

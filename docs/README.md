@@ -13,6 +13,7 @@
 | Panel modes, favorites, sequences and emotions | [Interface](INTERFACE-EXPERIENCE.md) |
 | Speaker, volume and sounds | [Audio](AUDIO.md) |
 | Languages | [Internationalization](I18N.md) |
+| AI development status and contribution roadmap | [AI roadmap](AI-ROADMAP.md) |
 | Voice, optional AI and Android | [Vivo](VIVO.md) |
 | Firmware versions and OTA record | [Versions](FIRMWARE-VERSIONS.md) |
 | Camera's stable build | [Camera profile](K9CAM-STABLE-PROFILE.md) |

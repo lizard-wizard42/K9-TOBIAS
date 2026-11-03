@@ -1,4 +1,4 @@
-# Contributing to K9
+# Contributing to K9-TOBIAS
 
 Thanks for helping! This is a hobby robotics project (firmware, hub/panel, Android app, 3D-printable body). Small, focused pull requests are easiest to review.
 
@@ -8,6 +8,12 @@ Thanks for helping! This is a hobby robotics project (firmware, hub/panel, Andro
 - **No secrets or personal data** (Wi‑Fi credentials, API keys, MAC addresses, home paths, photos of people). See [`SECURITY.md`](./SECURITY.md).
 - **Safety first:** the robot moves. Anything that touches walking, servos, calibration or the stop path needs a test and a note on how you verified it. "Stop" must always win.
 - Be honest in documentation: mark what was **measured**, what was **calculated** and what is an **assumption**.
+
+## Help give Tobias more life
+
+The [AI roadmap](docs/AI-ROADMAP.md) separates existing capabilities from proposed work. Useful contributions include expressive behavior, multilingual voice, vision experiments, local inference benchmarks, reliable movement, dashboard accessibility and clearer build documentation.
+
+Start small: describe the user-visible result, the relevant module and how it can be tested without moving hardware. For behavior and AI changes, record Stop/cancellation behavior, failure handling and whether any data leaves the local network. A simulated test does not establish physical validation. No physical robot is required for documentation, UI or simulation contributions.
 
 ## Setup
 
